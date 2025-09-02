@@ -365,6 +365,7 @@
         renderPreview(textContent);
       };
       reader.readAsArrayBuffer(file);
+      e.target.value = ""; // allow re-selecting the same file later
     });
 
     function renderPreview(text) {
