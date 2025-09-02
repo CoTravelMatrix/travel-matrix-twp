@@ -1,2 +1,2 @@
 # My Journey Journal-twp
-Living Travel Matrix (TWP): EMM-driven animated SVG with presets, timeline playback, snapshots, and shareable state.
+A calm, purposeful journalling app for travellers. The Science of Travel (EMM + Matrix) powers it quietly behind the scenes.
