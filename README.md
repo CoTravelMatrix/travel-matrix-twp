@@ -1,2 +1,2 @@
-# travel-matrix-twp
+# My Journey Journal-twp
 Living Travel Matrix (TWP): EMM-driven animated SVG with presets, timeline playback, snapshots, and shareable state.
