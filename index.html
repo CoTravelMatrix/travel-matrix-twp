@@ -131,16 +131,14 @@
         <!-- TRIPS -->
         <article id="trips" class="card" role="tabpanel" aria-labelledby="tab-trips" hidden>
           <h2>Trips</h2>
-          <p class="muted">Paste simple CSV: <span class="mono">date, place, activity</span>. Example: <span class="mono">2025-09-01, Athens, Anafiotika wander</span></p>
-          <textarea id="tripCsv" rows="6" placeholder="YYYY-MM-DD, Place, Activity"></textarea>
-          <div class="row" style="justify-content:flex-end">
-            <button id="loadTrips" class="btn primary">Load itinerary</button>
-          </div>
-          <div id="tripList" class="grid" style="margin-top:10px"></div>
-          <div class="import-pdf">
-            <button id="import-pdf-btn" class="btn">Import PDF Itinerary</button>
-            <input type="file" id="pdf-upload" accept="application/pdf" hidden />
-            <div id="pdf-preview" class="pdf-preview"></div>
+          <p class="muted">Import and preview your itineraries here.</p>
+          <div>
+            <button id="importPdfBtn" class="btn">Import PDF Itinerary</button>
+            <input type="file" id="pdfInput" accept="application/pdf" hidden />
+            <div id="pdfPreview" class="preview"></div>
+            <button id="saveTripBtn" class="btn">Save This Trip</button>
+            <h3>Saved Trips</h3>
+            <div id="savedTrips"></div>
           </div>
         </article>
 
@@ -176,22 +174,21 @@
     </main>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script type="module">
     import React from "https://esm.sh/react@18";
     import { createRoot } from "https://esm.sh/react-dom@18/client";
     import LivingMatrix from "./src/components/LivingMatrix.jsx";
 
     // Configure PDF.js worker so parsing runs without cross-origin issues
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
     // ---------- State ----------
     const $ = (s, r=document)=>r.querySelector(s);
     const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
     const state = {
       emm: { d:1, mu:1, s:1, tau:1, k:1 },
       entries: JSON.parse(localStorage.getItem('mjj.entries')||'[]'),
-      photos:  JSON.parse(localStorage.getItem('mjj.photos')||'[]'), // [{dataURL, date}]
-      trips:   JSON.parse(localStorage.getItem('mjj.trips')||'[]')   // [{date, place, activity}]
+      photos:  JSON.parse(localStorage.getItem('mjj.photos')||'[]') // [{dataURL, date}]
     };
 
     const matrixRoot = createRoot(document.getElementById('matrix-root'));
@@ -283,102 +280,72 @@
       a.click(); URL.revokeObjectURL(a.href);
     }
 
-    // ---------- Trips ----------
-    function loadTrips(){
-      const text = $('#tripCsv').value.trim();
-      if(!text){ $('#tripList').innerHTML='<p class="muted">Paste a few lines first.</p>'; return; }
-      const rows = text.split('\n').map(l=>l.split(',').map(s=>s.trim()));
-      const items = rows.filter(r=>r.length>=2).map(r=>({date:r[0], place:r[1], activity:r[2]||''}));
-      state.trips = items;
-      localStorage.setItem('mjj.trips', JSON.stringify(state.trips));
-      renderTrips();
-    }
-    function renderTrips(){
-      const box = $('#tripList');
-      if(state.trips.length===0){ box.innerHTML=''; return; }
-      box.innerHTML = state.trips.map(t=>`
-        <div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0">
-          <div><strong>${t.date}</strong> — ${t.place}${t.activity?': '+t.activity:''}</div>
-          <div class="chips"><span class="chip">itinerary</span></div>
-        </div>
-      `).join('');
-    }
-
     // ---------- Trips PDF Import ----------
-    const importBtn = document.getElementById("import-pdf-btn");
-    const fileInput = document.getElementById("pdf-upload");
-    const previewDiv = document.getElementById("pdf-preview");
+    const importPdfBtn = document.getElementById("importPdfBtn");
+    const pdfInput = document.getElementById("pdfInput");
+    const pdfPreview = document.getElementById("pdfPreview");
+    const saveTripBtn = document.getElementById("saveTripBtn");
+    const savedTripsDiv = document.getElementById("savedTrips");
 
-    importBtn?.addEventListener("click", () => fileInput.click());
+    let currentTripRows = [];
 
-    fileInput?.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    importPdfBtn.addEventListener("click", () => pdfInput.click());
+    pdfInput.addEventListener("change", handlePdf);
+    saveTripBtn.addEventListener("click", saveTrip);
 
-      const reader = new FileReader();
-      reader.onload = async function() {
-        const typedArray = new Uint8Array(this.result);
-
-        const pdf = await pdfjsLib.getDocument(typedArray).promise;
-        let textContent = "";
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          const strings = content.items.map(item => item.str);
-          textContent += strings.join(" ") + "\n";
-        }
-
-        renderPreview(textContent);
-      };
-      reader.readAsArrayBuffer(file);
-      e.target.value = ""; // allow re-selecting the same file later
-    });
-
-    function renderPreview(text) {
-      const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
-
-      let rows = [];
-      let currentDate = "";
-
-      lines.forEach(line => {
-        if (/^\d{1,2}\s+\w+\s+\d{4}/.test(line)) {
-          currentDate = line;
-        } else {
-          rows.push({ date: currentDate, detail: line });
-        }
-      });
-
-      previewDiv.innerHTML = `
-        <table class="trip-preview">
-          <thead><tr><th>Date</th><th>Detail</th></tr></thead>
-          <tbody>
-            ${rows.map(r => `<tr><td>${r.date}</td><td>${r.detail}</td></tr>`).join("")}
-          </tbody>
-        </table>
-        <button id="save-trips-btn" class="btn">Save to Trips</button>
-      `;
-
-      document.getElementById("save-trips-btn").onclick = () => {
-        state.trips = rows.map(r => ({ date: r.date, place: r.detail, activity: '' }));
-        localStorage.setItem('mjj.trips', JSON.stringify(state.trips));
-        renderTrips();
-        renderPreviewRows(rows);
-        alert("Trips saved!");
-      };
+    async function handlePdf(evt){
+      const file = evt.target.files[0];
+      if(!file) return;
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+      let text = "";
+      for(let i=1;i<=pdf.numPages;i++){
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(it=>it.str).join(" ") + "\n";
+      }
+      renderPreview(text);
+      evt.target.value = ""; // allow re-selecting same file
     }
 
-    function renderPreviewRows(rows){
-      if(!rows || rows.length===0){ previewDiv.innerHTML=''; return; }
-      previewDiv.innerHTML = `
-        <table class="trip-preview">
-          <thead><tr><th>Date</th><th>Detail</th></tr></thead>
+    function renderPreview(text){
+      const lines = text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+      currentTripRows = lines.map((line,i)=>({id:i, raw:line}));
+      const table = `
+        <table>
+          <thead><tr><th>#</th><th>Detail</th></tr></thead>
           <tbody>
-            ${rows.map(r => `<tr><td>${r.date}</td><td>${r.detail}</td></tr>`).join("")}
+            ${currentTripRows.map(r=>`<tr><td>${r.id+1}</td><td>${r.raw}</td></tr>`).join("")}
           </tbody>
         </table>
       `;
+      pdfPreview.innerHTML = table;
     }
+
+    function saveTrip(){
+      if(!currentTripRows.length) return alert("No trip to save!");
+      const saved = JSON.parse(localStorage.getItem("myTrips")||"[]");
+      const trip = { id: Date.now(), rows: currentTripRows };
+      saved.push(trip);
+      localStorage.setItem("myTrips", JSON.stringify(saved));
+      renderSavedTrips();
+    }
+
+    function renderSavedTrips(){
+      const saved = JSON.parse(localStorage.getItem("myTrips")||"[]");
+      if(!saved.length){
+        savedTripsDiv.innerHTML = "<em>No saved trips</em>";
+        return;
+      }
+      savedTripsDiv.innerHTML = saved.map(t=>`
+        <details>
+          <summary>Trip ${new Date(t.id).toLocaleString()}</summary>
+          <ul>${t.rows.map(r=>`<li>${r.raw}</li>`).join("")}</ul>
+        </details>
+      `).join("");
+    }
+
+    // Restore saved trips on load handled during init
 
     // ---------- Gallery ----------
     function handlePhotos(ev){
@@ -433,12 +400,10 @@
     applyEMM(state.emm);
     renderMatrix();
     wireInnerCompass(); wireTabs();
-    renderRecent(); renderTrips(); renderThumbs();
-    renderPreviewRows(state.trips.map(t=>({date:t.date, detail:t.place + (t.activity?': '+t.activity:'')})));
+    renderRecent(); renderSavedTrips(); renderThumbs();
 
     $('#saveEntry').addEventListener('click', saveEntry);
     $('#exportJournal').addEventListener('click', exportJournal);
-    $('#loadTrips').addEventListener('click', loadTrips);
     $('#photos').addEventListener('change', handlePhotos);
     $('#copyLink').addEventListener('click', copyShare);
   </script>
