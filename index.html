@@ -52,7 +52,6 @@
 <body>
   <div class="wrap">
     <div class="grid">
-
       <!-- Left: Matrix -->
       <div class="card pad">
         <h1>Travel Matrix — TWP</h1>
@@ -154,11 +153,11 @@
           </div>
         </details>
       </div>
-
     </div>
   </div>
 
 <script>
+window.addEventListener('DOMContentLoaded', function () {
   const setVar = (name, val) => document.documentElement.style.setProperty(name, val);
   const fmt = x => Number(x).toFixed(2);
   const q = id => document.getElementById(id);
@@ -200,15 +199,34 @@
   // Reset
   q('btnReset').onclick=()=>apply({d:1,mu:1,s:1,tau:1,k:1});
 
-  // Timeline
+  // Timeline (loud + visible)
   let timeline=[]; let playId=null; let idx=0;
-  q('btnLoadCSV').onclick=()=>{ const txt=q('csv').value.trim(); if(!txt) return alert('Paste CSV first.');
+
+  q('btnLoadCSV').onclick=()=>{ 
+    const txt=q('csv').value.trim(); 
+    if(!txt) return alert('Paste CSV first.');
     timeline=txt.split(/\n+/).map(line=>{const [date,d,mu,s,tau,k]=line.split(/\s*,\s*/); return {date,d:+d,mu:+mu,s:+s,tau:+tau,k:+k};})
-      .filter(r=>[r.d,r.mu,r.s,r.tau,r.k].every(v=>!Number.isNaN(v))); idx=0; q('now').textContent=`${timeline.length} entries loaded`; };
-  function step(){ if(!timeline.length){q('now').textContent='No timeline loaded'; return;}
-    const row=timeline[idx%timeline.length]; apply(row); q('now').textContent=row.date||`Entry ${idx+1}`; idx++; }
-  q('btnPlay').onclick=()=>{ if(playId||!timeline.length) return; step(); playId=setInterval(step, 1500 / (+q('playSpeed').value||1)); };
-  q('btnPause').onclick=()=>{ if(playId){clearInterval(playId); playId=null;} };
+      .filter(r=>[r.d,r.mu,r.s,r.tau,r.k].every(v=>!Number.isNaN(v)));
+    idx=0; q('now').textContent=`${timeline.length} entries loaded`; 
+  };
+
+  function flash(){ const svg=q('matrixSVG'); svg.style.outline='3px solid rgba(50,111,183,.6)'; setTimeout(()=>svg.style.outline='none',180); }
+
+  function step(){ 
+    if(!timeline.length){ q('now').textContent='No timeline loaded'; return; }
+    const row=timeline[idx % timeline.length];
+    apply(row); q('now').textContent=row.date || `Entry ${idx+1}`; flash(); idx++; 
+  }
+
+  q('btnPlay').onclick=()=>{ 
+    if(playId || !timeline.length) return; 
+    step(); 
+    const sp=+q('playSpeed').value || 1; 
+    playId=setInterval(step, 1500 / sp); 
+  };
+
+  q('btnPause').onclick=()=>{ if(playId){ clearInterval(playId); playId=null; } };
+});
 </script>
 </body>
 </html>
