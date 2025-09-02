@@ -34,7 +34,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
   function bind(id, cssVar, labelId){
     const el=q(id), lab=q(labelId);
-    const update=()=>{ setVar(`--${cssVar}`, el.value); lab.textContent=fmt(el.value); saveState(); };
+    const update=()=>{ setVar(`--${cssVar}`, el.value); lab.textContent=fmt(el.value); };
     el.addEventListener('input', update); update();
   }
   bind('d','d','vd'); bind('mu','mu','vmu'); bind('s','s','vs'); bind('tau','tau','vtau'); bind('k','k','vk');
@@ -48,13 +48,13 @@ window.addEventListener('DOMContentLoaded', function () {
     '2025-09-02,0.80,0.60,2.00,0.70,0.90',
     '2025-09-03,1.60,1.20,0.50,1.60,1.30',
     '2025-09-04,0.70,2.00,1.80,0.60,1.00'
-  ].join('\\n');
+  ].join('\n');
 
   const status = msg => { q('now').textContent = msg; };
 
   function parseCSV(text){
-    return text.trim().split(/\\n+/).map(line=>{
-      const parts = line.split(/\\s*,\\s*/);
+    return text.trim().split(/\n+/).map(line=>{
+      const parts = line.split(/\s*,\s*/);
       if (parts.length < 6) return null;
       const [date,d,mu,s,tau,k]=parts;
       const row = {date, d:+d, mu:+mu, s:+s, tau:+tau, k:+k};
