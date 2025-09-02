@@ -1,38 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Travel Matrix Timeline Test</title>
+  <meta charset="utf-8" />
+  <title>Travel Matrix — Timeline Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: sans-serif; }
-    #matrixSVG { width:200px; height:200px; border:1px solid #333; margin:10px 0; }
-    input[type=range] { width: 100px; }
-    #now { margin:10px 0; font-weight:bold; }
-    .preset-btn { margin-right: 5px; }
-    .tool-row { margin: 8px 0; }
+    :root {
+      --d: 1;
+      --mu: 1;
+      --s: 1;
+      --tau: 1;
+      --k: 1;
+    }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:20px; color:#111; }
+    h2 { margin:0 0 12px 0; }
+    .tool-row { margin:10px 0; }
+    textarea { font-family: monospace; width:640px; max-width:100%; }
+    #matrixSVG { width: 640px; max-width:100%; height: 420px; border:1px solid #ddd; background: linear-gradient(#fff,#f9f9fb); display:block; }
+    input[type=range] { vertical-align: middle; }
+    .preset-btn { margin-right:6px; }
+    #now { margin-top:10px; font-weight:600; color:#135; }
+    .legend { font-size:12px; color:#444; margin-top:6px; }
   </style>
 </head>
 <body>
   <h2>Travel Matrix Timeline Test</h2>
-  <!-- Timeline CSV Input -->
+
   <div class="tool-row">
     <textarea id="csv" rows="5" cols="60" placeholder="Paste your timeline CSV data here"></textarea><br>
     <button id="btnLoadCSV">Load CSV</button>
     <button id="btnPlay">Play</button>
     <button id="btnPause">Pause</button>
-    Speed: <input id="playSpeed" type="number" value="1" min="1" max="5">
+    Speed: <input id="playSpeed" type="number" value="1" min="1" max="5" style="width:64px">
   </div>
-  <!-- Matrix SVG -->
-  <svg id="matrixSVG"></svg>
-  <!-- Sliders -->
+
+  <svg id="matrixSVG" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Travel matrix visualization"></svg>
+
   <div class="tool-row">
-    <label>D: <input id="d" type="range" min="0" max="2" step="0.01"><span id="vd"></span></label> |
-    <label>Mu: <input id="mu" type="range" min="0" max="2" step="0.01"><span id="vmu"></span></label> |
-    <label>S: <input id="s" type="range" min="0" max="2" step="0.01"><span id="vs"></span></label> |
-    <label>Tau: <input id="tau" type="range" min="0" max="2" step="0.01"><span id="vtau"></span></label> |
-    <label>K: <input id="k" type="range" min="0" max="2" step="0.01"><span id="vk"></span></label>
+    <label>D: <input id="d" type="range" min="0" max="2" step="0.01"><span id="vd"></span></label>
+    &nbsp; <label>Mu: <input id="mu" type="range" min="0" max="2" step="0.01"><span id="vmu"></span></label>
+    &nbsp; <label>S: <input id="s" type="range" min="0" max="2" step="0.01"><span id="vs"></span></label>
+    &nbsp; <label>Tau: <input id="tau" type="range" min="0" max="2" step="0.01"><span id="vtau"></span></label>
+    &nbsp; <label>K: <input id="k" type="range" min="0" max="2" step="0.01"><span id="vk"></span></label>
   </div>
-  <!-- Preset Buttons -->
+
   <div class="tool-row">
     <button data-preset="Balanced" class="preset-btn">Balanced</button>
     <button data-preset="Explorer" class="preset-btn">Explorer</button>
@@ -42,15 +53,17 @@
     <button id="btnSavePreset">Save Preset</button>
     <button id="btnLoadPreset">Load Preset</button>
   </div>
-  <!-- Other tools -->
+
   <div class="tool-row">
     <button id="btnShare">Share Link</button>
     <button id="btnSnapshot">Snapshot</button>
     <button id="btnReset">Reset</button>
   </div>
-  <!-- Status display -->
+
   <div id="now"></div>
-  <!-- The robust script you provided -->
+  <div class="legend">Visualization: nodes = groups, node size ↔ S, stroke ↔ D, color ↔ K, link opacity ↔ Mu/Tau.</div>
+
+  <!-- ======= Your robust script (kept unchanged) ======= -->
   <script>
 window.addEventListener('DOMContentLoaded', function () {
   const setVar = (name, val) => document.documentElement.style.setProperty(name, val);
@@ -149,6 +162,174 @@ window.addEventListener('DOMContentLoaded', function () {
 
   q('btnPause').onclick=()=>{ if (playId){ clearInterval(playId); playId = null; status('Paused'); } };
 });
+  </script>
+
+  <!-- ======= Rendering layer (keeps your script unchanged, updates the SVG visuals) ======= -->
+  <script>
+  (function(){
+    const svg = document.getElementById('matrixSVG');
+
+    // Create a group for visuals
+    function clearSVG() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    // Utility: read current parameter state
+    function getParams() {
+      const d = +document.getElementById('d').value;
+      const mu = +document.getElementById('mu').value;
+      const s = +document.getElementById('s').value;
+      const tau = +document.getElementById('tau').value;
+      const k = +document.getElementById('k').value;
+      return {d,mu,s,tau,k};
+    }
+
+    // Draw a simple illustrative travel-matrix visualization:
+    // - 5 nodes in a pentagon; node radius ~ s
+    // - stroke width ~ d
+    // - color hue ~ k
+    // - link opacity & thickness ~ mu/tau
+    // - center heat grid representing parameter intensities
+    function renderMatrix(){
+      const p = getParams();
+      clearSVG();
+
+      // background grid
+      const grid = document.createElementNS('http://www.w3.org/2000/svg','g');
+      grid.setAttribute('opacity','0.06');
+      for(let i=0;i<10;i++){
+        const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        r.setAttribute('x',40 + i*70);
+        r.setAttribute('y',60);
+        r.setAttribute('width',60);
+        r.setAttribute('height',380);
+        r.setAttribute('fill','#66a');
+        r.setAttribute('transform','rotate(6 40 60)');
+        r.setAttribute('rx',8);
+        grid.appendChild(r);
+      }
+      svg.appendChild(grid);
+
+      // center heat square showing combined intensity
+      const heat = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      heat.setAttribute('x',520); heat.setAttribute('y',40);
+      heat.setAttribute('width',240); heat.setAttribute('height',220);
+      const combined = Math.min(1, (p.s*0.25 + p.k*0.2 + p.mu*0.2 + p.d*0.2 + p.tau*0.15) / 1.5);
+      const hue = 215 - (p.k-1)*60; // k changes hue
+      heat.setAttribute('fill', `hsl(${hue} ${40 + combined*40}% ${65 - combined*25}%)`);
+      heat.setAttribute('stroke','#234'); heat.setAttribute('stroke-opacity','0.08'); heat.setAttribute('rx','8');
+      svg.appendChild(heat);
+
+      // nodes in a pentagon
+      const cx = 300, cy = 260, r = 160;
+      const nodes = [];
+      for(let i=0;i<5;i++){
+        const ang = -Math.PI/2 + (i * Math.PI*2 / 5);
+        const x = cx + r*Math.cos(ang);
+        const y = cy + r*Math.sin(ang);
+        nodes.push({x,y});
+      }
+
+      // links
+      const links = document.createElementNS('http://www.w3.org/2000/svg','g');
+      const linkOpacity = Math.min(1, Math.max(0.08, (p.mu / (p.tau||1))));
+      const linkWidth = 1 + (p.mu * 2 / (p.tau||1));
+      for(let i=0;i<nodes.length;i++){
+        for(let j=i+1;j<nodes.length;j++){
+          const L = document.createElementNS('http://www.w3.org/2000/svg','line');
+          L.setAttribute('x1',nodes[i].x); L.setAttribute('y1',nodes[i].y);
+          L.setAttribute('x2',nodes[j].x); L.setAttribute('y2',nodes[j].y);
+          L.setAttribute('stroke',`rgba(20,50,80,${0.12 + 0.6*linkOpacity})`);
+          L.setAttribute('stroke-width', Math.max(0.6, linkWidth));
+          L.setAttribute('stroke-linecap','round');
+          links.appendChild(L);
+        }
+      }
+      svg.appendChild(links);
+
+      // draw nodes
+      const nodesG = document.createElementNS('http://www.w3.org/2000/svg','g');
+      nodesG.setAttribute('stroke-linejoin','round');
+      for(let i=0;i<nodes.length;i++){
+        const n = nodes[i];
+        const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.setAttribute('transform', `translate(${n.x},${n.y})`);
+        // node halo
+        const halo = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        halo.setAttribute('r', 30 + p.s*10);
+        halo.setAttribute('fill', `rgba(60,140,220,${0.06 + (p.k-0.5)*0.08})`);
+        g.appendChild(halo);
+        // main circle
+        const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        const radius = 12 + p.s*8;
+        c.setAttribute('r', radius);
+        const hue = 210 - (p.k-1)*60;
+        c.setAttribute('fill', `hsl(${hue} ${50 + (p.k-1)*20}% ${58 - (p.s-1)*6}%)`);
+        c.setAttribute('stroke', `rgba(8,24,48,${0.55 + (p.d-1)*0.15})`);
+        c.setAttribute('stroke-width', Math.max(0.8, p.d*1.5));
+        g.appendChild(c);
+        // label
+        const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+        label.setAttribute('y', radius + 18);
+        label.setAttribute('x', 0);
+        label.setAttribute('text-anchor','middle');
+        label.setAttribute('font-size','12');
+        label.setAttribute('fill','#123');
+        label.textContent = ['A','B','C','D','E'][i];
+        g.appendChild(label);
+
+        nodesG.appendChild(g);
+      }
+      svg.appendChild(nodesG);
+
+      // parameter readouts in SVG
+      const infoG = document.createElementNS('http://www.w3.org/2000/svg','g');
+      infoG.setAttribute('transform','translate(520,280)');
+      const params = ['D','Mu','S','Tau','K'];
+      const vals = [p.d,p.mu,p.s,p.tau,p.k];
+      for(let i=0;i<5;i++){
+        const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+        t.setAttribute('y', i*18);
+        t.setAttribute('font-size','13');
+        t.setAttribute('fill','#222');
+        t.textContent = `${params[i]}: ${vals[i].toFixed(2)}`;
+        infoG.appendChild(t);
+      }
+      svg.appendChild(infoG);
+
+      // subtle footer timestamp
+      const foot = document.createElementNS('http://www.w3.org/2000/svg','text');
+      foot.setAttribute('x', 520);
+      foot.setAttribute('y', 520-10);
+      foot.setAttribute('font-size','11');
+      foot.setAttribute('fill','#666');
+      foot.textContent = `visual updated: ${new Date().toLocaleString()}`;
+      svg.appendChild(foot);
+    }
+
+    // Wire up: update on any slider input + when timeline steps apply (apply dispatches input events)
+    ['d','mu','s','tau','k'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('input', renderMatrix);
+    });
+
+    // Also update when presets, load, play do their thing.
+    document.getElementById('btnLoadCSV').addEventListener('click', ()=>setTimeout(renderMatrix,60));
+    document.getElementById('btnPlay').addEventListener('click', ()=>setTimeout(renderMatrix,60));
+    document.getElementById('btnPause').addEventListener('click', ()=>setTimeout(renderMatrix,60));
+
+    // initial render (sliders have been bound by user's script and initial update called in bind)
+    setTimeout(renderMatrix, 70);
+
+    // Re-render every second while playing to keep visuals in sync
+    let renderTicker = null;
+    const startRenderTicker = ()=>{ if(renderTicker) return; renderTicker = setInterval(renderMatrix, 900); };
+    const stopRenderTicker = ()=>{ if(renderTicker){ clearInterval(renderTicker); renderTicker = null; } };
+    document.getElementById('btnPlay').addEventListener('click', startRenderTicker);
+    document.getElementById('btnPause').addEventListener('click', stopRenderTicker);
+    window.addEventListener('beforeunload', stopRenderTicker);
+  })();
   </script>
 </body>
 </html>
