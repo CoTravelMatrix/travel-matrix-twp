@@ -1,308 +1,550 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>My Journey Journal — Travel With Purpose</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  :root{ --blue:#326FB7; --ink:#111; --paper:#F6F7F8; --line:#E7EAEE; }
-  html,body{margin:0;background:var(--paper);font:11pt Calibri, Arial, sans-serif;color:var(--ink)}
-  .wrap{max-width:980px;margin:28px auto;padding:0 14px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.07);margin-bottom:16px}
-  .pad{padding:14px}
-  h1{font-size:18px;margin:0 0 6px}
-  h2{font-size:16px;margin:10px 0 6px}
-  .small{font-size:12px;color:#47515a}
-  .muted{color:#6b7580}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
-  .col{flex:1 1 260px}
-  input[type=text], input[type=date], textarea, select{
-    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff
-  }
-  textarea{min-height:96px}
-  .btn{cursor:pointer;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
-  .btn:hover{box-shadow:0 2px 6px rgba(0,0,0,.08)}
-  .btn.blue{border-color:var(--blue);color:#fff;background:var(--blue)}
-  .tag{display:inline-block;padding:4px 8px;border:1px solid var(--line);border-radius:999px;margin:2px 4px;font-size:12px;cursor:pointer}
-  .tag.active{border-color:var(--blue);color:#fff;background:var(--blue)}
-  .right{display:flex;justify-content:flex-end;gap:8px}
-  .list{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}
-  .entry{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
-  .pill{display:inline-block;background:#eef4fb;color:#204c7a;border-radius:999px;padding:2px 8px;font-size:11px;margin-right:6px}
-  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  @media (max-width:720px){.grid{grid-template-columns:1fr}}
-  .hint{font-size:11px;color:#667;line-height:1.4}
-  .hr{height:1px;background:var(--line);margin:10px 0}
-</style>
-</head>
-<body>
-<div class="wrap">
+import React, { useState, useEffect } from 'react';
 
-  <!-- Header -->
-  <div class="card pad">
-    <h1>My Journey Journal</h1>
-    <div class="small">
-      Travel with Purpose begins at Zero—calm the chaos, centre the “you”, and move piece-by-piece from puzzle to picture. 
-      Use the prompts below to reflect, then log an entry. Your North Star steadies the course; the tree grows with each note. 
-    </div>
-  </div>
+const TravelMatrixDemo = () => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [demoEmm, setDemoEmm] = useState({ d: 1.0, mu: 1.0, s: 1.0, tau: 1.0, k: 1.0 });
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  <!-- North Star / Mental Compass -->
-  <div class="card pad" id="compass">
-    <h2>North Star — Mental Compass</h2>
-    <div class="row">
-      <div class="col">
-        <label class="small">Today’s North Star (one line)</label>
-        <input type="text" id="northStar" placeholder="What quietly matters most today?">
-      </div>
-      <div class="col">
-        <label class="small">State at Zero (one word)</label>
-        <input type="text" id="zeroWord" placeholder="Calm / Curious / Patient …">
-      </div>
-    </div>
-    <div class="hr"></div>
-    <div class="grid">
-      <div>
-        <label class="small">5 Components check-in (quick notes)</label>
-        <textarea id="fiveNotes" placeholder="Where? When? How? How much? Who?"></textarea>
-        <div class="hint muted">The 5 components frame the plan; YOU is the living centre. Align them lightly, not rigidly.</div>
-      </div>
-      <div>
-        <label class="small">Ikigai lens (what I love / am good at / world needs / can be paid for)</label>
-        <textarea id="ikigai" placeholder="One sentence per quadrant, if helpful."></textarea>
-        <div class="hint muted">A glance, not an exam. We’re seeking direction, not judgement.</div>
-      </div>
-    </div>
-  </div>
+  // Demo journal entries showing different emotional states
+  const demoEntries = [
+    {
+      id: 1,
+      date: '2024-09-01',
+      title: 'Peaceful Morning',
+      score: 85,
+      tags: ['calm', 'grateful', 'grounded'],
+      body: 'Started the day with meditation. Feeling centered and ready for whatever comes.',
+      emm: { d: 0.9, mu: 1.4, s: 0.7, tau: 1.3, k: 1.2 }
+    },
+    {
+      id: 2,
+      date: '2024-09-02', 
+      title: 'Adventure Calling',
+      score: 92,
+      tags: ['excited', 'curious', 'brave'],
+      body: 'Booked that hiking trip! Heart racing with anticipation. Time to explore.',
+      emm: { d: 1.4, mu: 1.1, s: 1.6, tau: 0.8, k: 1.3 }
+    },
+    {
+      id: 3,
+      date: '2024-09-03',
+      title: 'Overwhelming Day', 
+      score: 45,
+      tags: ['overwhelmed', 'tired', 'anxious'],
+      body: 'Too many decisions, too little time. Need to slow down and breathe.',
+      emm: { d: 0.8, mu: 0.6, s: 0.5, tau: 0.7, k: 0.9 }
+    },
+    {
+      id: 4,
+      date: '2024-09-04',
+      title: 'Deep Connections',
+      score: 88,
+      tags: ['connected', 'hopeful', 'tender'],
+      body: 'Long conversation with old friend. Reminded me what really matters.',
+      emm: { d: 1.0, mu: 1.7, s: 0.9, tau: 1.2, k: 1.4 }
+    }
+  ];
 
-  <!-- Two-Minute Evening Pager -->
-  <div class="card pad">
-    <h2>Two-Minute Evening Pager</h2>
-    <div class="grid">
-      <div>
-        <label class="small">What moved today? (1–2 lines)</label>
-        <textarea id="moved" placeholder="The tiny motion that mattered…"></textarea>
-      </div>
-      <div>
-        <label class="small">One win, one lesson</label>
-        <textarea id="winLesson" placeholder="Win → …  Lesson → …"></textarea>
-      </div>
-      <div>
-        <label class="small">One kindness given</label>
-        <textarea id="kindness" placeholder="To self or others."></textarea>
-      </div>
-      <div>
-        <label class="small">Tomorrow’s micro-move</label>
-        <textarea id="micromove" placeholder="So small it’s almost silly."></textarea>
-      </div>
-    </div>
-  </div>
+  const steps = [
+    {
+      title: "1. Daily Journal Reflection",
+      description: "You write in your Journey Journal each evening - just 2 minutes capturing your day's emotions, experiences, and insights.",
+      component: "journal"
+    },
+    {
+      title: "2. Intelligent EMM Translation", 
+      description: "The system analyzes your tags, mood score, and reflections to calculate your unique EMM signature for that day.",
+      component: "analysis"
+    },
+    {
+      title: "3. Living Matrix Visualization",
+      description: "Your EMM values become a living, breathing geometric art piece. Each value controls different aspects of the animation.",
+      component: "matrix"
+    },
+    {
+      title: "4. Personalized Travel Insights",
+      description: "Based on your EMM patterns over time, get AI-powered suggestions for destinations and experiences that match your inner journey.",
+      component: "insights"
+    }
+  ];
 
-  <!-- Random Hearts (prompt picker) -->
-  <div class="card pad">
-    <h2>Random Hearts — Prompt Picker</h2>
-    <div class="row">
-      <button class="btn" data-prompt="purpose">North Star: Purpose</button>
-      <button class="btn" data-prompt="excitement">Fast Orbit: Excitement</button>
-      <button class="btn" data-prompt="connection">Medium Orbit: Connection</button>
-      <button class="btn" data-prompt="reflection">Slow Orbit: Reflection</button>
-    </div>
-    <div id="promptBox" class="small muted" style="margin-top:8px"></div>
-  </div>
+  const currentEntry = demoEntries[currentStep % demoEntries.length];
 
-  <!-- Emotions Glossary (tags that drive the score) -->
-  <div class="card pad">
-    <h2>Feelings & Signals — Tag what’s present</h2>
-    <div class="hint muted" style="margin-bottom:6px">
-      Tap a few words below (edit list anytime). Tags don’t define you; they reveal conditions around the journey.
-    </div>
-    <div id="tags" style="margin-bottom:8px"></div>
-    <div class="row">
-      <div class="col">
-        <textarea id="glossary" class="small" style="min-height:70px"
-          placeholder="Edit feelings list here, comma-separated…">Calm, Curious, Excited, Grateful, Connected, Grounded, Overwhelmed, Tired, Anxious, Disappointed, Lonely, Hopeful, Brave, Tender, Playful</textarea>
-      </div>
-      <div class="col right">
-        <button class="btn" id="applyGlossary">Update Words</button>
-      </div>
-    </div>
-  </div>
+  // Update EMM when step changes
+  useEffect(() => {
+    if (currentEntry) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setDemoEmm(currentEntry.emm);
+        setIsAnimating(false);
+      }, 300);
+    }
+  }, [currentStep, currentEntry]);
 
-  <!-- Journal Entry -->
-  <div class="card pad">
-    <h2>Write Today’s Entry</h2>
-    <div class="row">
-      <div class="col"><label class="small">Date</label><input type="date" id="date"></div>
-      <div class="col"><label class="small">Title</label><input type="text" id="title" placeholder="Give the page a name"></div>
-    </div>
-    <label class="small" style="margin-top:8px;display:block">Your story</label>
-    <textarea id="body" placeholder="What’s the picture the puzzle is pointing to? Where’s the seed pushing up?"></textarea>
-    <div class="row" style="align-items:center;margin-top:8px">
-      <div class="col small muted">Selected tags: <span id="chosen" class="pill"></span></div>
-      <div class="col right">
-        <button class="btn" id="scoreBtn">Score Preview</button>
-        <button class="btn blue" id="saveBtn">Save Entry</button>
-      </div>
-    </div>
-    <div id="scoreLine" class="small muted" style="margin-top:6px"></div>
-  </div>
+  // Update CSS variables for animation
+  useEffect(() => {
+    const root = document.documentElement;
+    Object.entries(demoEmm).forEach(([key, value]) => {
+      root.style.setProperty(`--demo-${key}`, value.toString());
+    });
+  }, [demoEmm]);
 
-  <!-- Entries List + Export -->
-  <div class="card pad">
-    <div class="row" style="align-items:center">
-      <h2 style="flex:1">Your Pages</h2>
-      <div class="right">
-        <button class="btn" id="exportCSV">Export CSV</button>
-        <button class="btn" id="clearAll">Clear All (local)</button>
-      </div>
-    </div>
-    <div class="list" id="entries"></div>
-    <div class="hint muted">Stored on your device. Export to feed the Matrix Timeline later.</div>
-  </div>
-
-  <div class="small muted" style="text-align:center;margin:18px 0">
-    © CoTravel — Travel with Purpose. Journal structure inspired by your Travel Matrix (puzzle + tree, Zero→Flow, 5 components, Ikigai, Journey Journaling). 
-  </div>
-
-</div>
-
-<script>
-(function(){
-  const $ = (id)=>document.getElementById(id);
-  const todayISO = ()=> new Date().toISOString().slice(0,10);
-  $('date').value = todayISO();
-
-  // Random Hearts (your tone)
-  const PROMPTS = {
-    purpose: 'North Star: What quietly matters most today? Name the smallest move that honours it.',
-    excitement: 'Excitement: Where did curiosity spark? How could you keep a gentle flame without burning out?',
-    connection: 'Connection: Who or what felt like good company? What condition helped it happen?',
-    reflection: 'Reflection: What needs grace or fallow time? Where can you pause without quitting?'
+  const nextStep = () => {
+    setCurrentStep((prev) => (prev + 1) % steps.length);
   };
-  document.querySelectorAll('[data-prompt]').forEach(b=>{
-    b.addEventListener('click', ()=>{ $('promptBox').textContent = PROMPTS[b.dataset.prompt]; });
-  });
 
-  // Glossary → clickable tags
-  function renderTags(){
-    const box = $('tags'); box.innerHTML = '';
-    const words = $('glossary').value.split(',').map(s=>s.trim()).filter(Boolean);
-    words.forEach(w=>{
-      const span = document.createElement('span');
-      span.className = 'tag'; span.textContent = w;
-      span.addEventListener('click', ()=>{ span.classList.toggle('active'); renderChosen(); });
-      box.appendChild(span);
-    });
-  }
-  function renderChosen(){
-    const chosen = [...document.querySelectorAll('#tags .tag.active')].map(el=>el.textContent);
-    $('chosen').textContent = chosen.join(' · ');
-  }
-  $('applyGlossary').addEventListener('click', renderTags);
-  renderTags();
+  const prevStep = () => {
+    setCurrentStep((prev) => (prev - 1 + steps.length) % steps.length);
+  };
 
-  // Micro score (transparent, not a verdict)
-  function computeScore(){
-    const tags = [...document.querySelectorAll('#tags .tag.active')].map(el=>el.textContent.toLowerCase());
-    const positives = ['calm','curious','grateful','connected','grounded','hopeful','brave','tender','playful','excited'];
-    const negatives = ['overwhelmed','tired','anxious','disappointed','lonely'];
-    let pos = tags.filter(t=>positives.includes(t)).length;
-    let neg = tags.filter(t=>negatives.includes(t)).length;
-    const base = 50 + (pos*8) - (neg*8);
-    const clamp = Math.max(0, Math.min(100, base));
-    return Math.round(clamp);
-  }
-  $('scoreBtn').addEventListener('click', ()=>{
-    $('scoreLine').textContent = 'Signal score (0–100): ' + computeScore() + ' — a weather report, not a judgement.';
-  });
+  const fmt = (x) => Number(x).toFixed(2);
 
-  // Save entry (localStorage)
-  function loadAll(){ try{return JSON.parse(localStorage.getItem('twp.journal.v1'))||[]}catch(e){return[];} }
-  function saveAll(arr){ localStorage.setItem('twp.journal.v1', JSON.stringify(arr)); }
-  function clearForm(){
-    $('title').value=''; $('body').value=''; $('moved').value=''; $('winLesson').value=''; $('kindness').value=''; $('micromove').value='';
-    document.querySelectorAll('#tags .tag.active').forEach(el=>el.classList.remove('active')); renderChosen(); $('scoreLine').textContent='';
-  }
-  function renderList(){
-    const box = $('entries'); box.innerHTML='';
-    const all = loadAll().sort((a,b)=>b.date.localeCompare(a.date));
-    all.forEach((e,i)=>{
-      const div = document.createElement('div'); div.className='entry';
-      div.innerHTML = `
-        <div class="row" style="align-items:center">
-          <div class="small muted" style="flex:1">${e.date} — <strong>${escapeHtml(e.title||'Untitled')}</strong></div>
-          <div class="pill">Score ${e.score}</div>
-          <button class="btn" data-del="${e.id}">Delete</button>
+  const renderJournalStep = () => (
+    <div className="bg-white rounded-xl p-6 border border-gray-200">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+          📖
         </div>
-        <div class="small" style="margin:6px 0">${e.tags.map(t=>`<span class="pill">${escapeHtml(t)}</span>`).join(' ')}</div>
-        <div class="small muted">${escapeHtml(e.northStar||'')}</div>
-        <div class="hr"></div>
-        <div>${nl2br(escapeHtml(e.body||''))}</div>
-        <div class="hr"></div>
-        <div class="grid small muted">
-          <div><strong>Moved:</strong> ${nl2br(escapeHtml(e.moved||''))}</div>
-          <div><strong>Win/Lesson:</strong> ${nl2br(escapeHtml(e.winLesson||''))}</div>
-          <div><strong>Kindness:</strong> ${nl2br(escapeHtml(e.kindness||''))}</div>
-          <div><strong>Tomorrow’s micro-move:</strong> ${nl2br(escapeHtml(e.micromove||''))}</div>
+        <h3 className="text-lg font-semibold">Today's Journal Entry</h3>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="flex gap-4">
+          <div>
+            <label className="text-sm text-gray-600">Date</label>
+            <div className="font-medium">{currentEntry.date}</div>
+          </div>
+          <div>
+            <label className="text-sm text-gray-600">Mood Score</label>
+            <div className="font-medium">{currentEntry.score}/100</div>
+          </div>
         </div>
-      `;
-      box.appendChild(div);
-    });
-    box.querySelectorAll('[data-del]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const id = btn.getAttribute('data-del');
-        const next = loadAll().filter(e=>e.id!==id); saveAll(next); renderList();
-      });
-    });
-  }
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function nl2br(s){ return (s||'').replace(/\n/g,'<br>'); }
-  function uuid(){ return 'id-'+Math.random().toString(36).slice(2,10); }
+        
+        <div>
+          <label className="text-sm text-gray-600">Title</label>
+          <div className="font-medium text-lg">{currentEntry.title}</div>
+        </div>
+        
+        <div>
+          <label className="text-sm text-gray-600">Feelings</label>
+          <div className="flex gap-2 mt-1">
+            {currentEntry.tags.map((tag, index) => (
+              <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+        
+        <div>
+          <label className="text-sm text-gray-600">Reflection</label>
+          <div className="text-gray-800 leading-relaxed">{currentEntry.body}</div>
+        </div>
+      </div>
+    </div>
+  );
 
-  $('saveBtn').addEventListener('click', ()=>{
-    const tags = [...document.querySelectorAll('#tags .tag.active')].map(el=>el.textContent);
-    const entry = {
-      id: uuid(),
-      date: $('date').value || todayISO(),
-      title: $('title').value.trim(),
-      body: $('body').value,
-      tags,
-      score: computeScore(),
-      northStar: $('northStar').value,
-      zeroWord: $('zeroWord').value,
-      fiveNotes: $('fiveNotes').value,
-      ikigai: $('ikigai').value,
-      moved: $('moved').value,
-      winLesson: $('winLesson').value,
-      kindness: $('kindness').value,
-      micromove: $('micromove').value
+  const renderAnalysisStep = () => (
+    <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+          🧠
+        </div>
+        <h3 className="text-lg font-semibold">EMM Analysis</h3>
+      </div>
+      
+      <div className="space-y-4">
+        <p className="text-gray-700">
+          Your journal entry is analyzed to extract your Existential Motion Metric (EMM) signature:
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {Object.entries(currentEntry.emm).map(([key, value]) => (
+            <div key={key} className="text-center p-3 bg-white rounded-lg border">
+              <div className="text-2xl font-mono font-bold text-purple-600">
+                {fmt(value)}
+              </div>
+              <div className="text-sm font-medium text-gray-600">
+                {key === 'mu' ? 'μ (meaning)' : 
+                 key === 'tau' ? 'τ (patience)' :
+                 key === 'd' ? 'd (distance)' :
+                 key === 's' ? 's (speed)' : 'k (intention)'}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {key === 'd' ? 'Adventure vs Safety' :
+                 key === 'mu' ? 'Connection & Purpose' :
+                 key === 's' ? 'Energy & Activity' :
+                 key === 'tau' ? 'Calm vs Stress' : 'Direction & Focus'}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="bg-white rounded-lg p-4 border border-purple-200">
+          <h4 className="font-medium mb-2">How it works:</h4>
+          <ul className="text-sm text-gray-600 space-y-1">
+            <li>• <strong>Tags like "excited, curious"</strong> increase Distance & Speed</li>
+            <li>• <strong>High mood scores</strong> boost Meaning & Intention</li>
+            <li>• <strong>"Calm, grounded" feelings</strong> enhance Patience</li>
+            <li>• <strong>Stress indicators</strong> lower multiple dimensions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMatrixStep = () => (
+    <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+          ✨
+        </div>
+        <h3 className="text-lg font-semibold">Living Matrix Visualization</h3>
+      </div>
+      
+      <div className="space-y-4">
+        <p className="text-gray-700">
+          Your EMM values control every aspect of this living geometric art:
+        </p>
+        
+        {/* SVG Matrix */}
+        <div className="bg-white rounded-lg p-4 border">
+          <svg 
+            className="w-full h-auto matrix-demo"
+            viewBox="0 0 400 400" 
+            style={{
+              '--demo-d': demoEmm.d,
+              '--demo-mu': demoEmm.mu, 
+              '--demo-s': demoEmm.s,
+              '--demo-tau': demoEmm.tau,
+              '--demo-k': demoEmm.k
+            } as React.CSSProperties}
+          >
+            {/* Background */}
+            <rect width="400" height="400" fill="#f8fafc" />
+            
+            {/* Outer breathing field */}
+            <g className="demo-outer">
+              <circle 
+                cx="200" 
+                cy="200" 
+                r="180" 
+                fill="none" 
+                stroke="#326FB7" 
+                strokeWidth="2"
+                opacity="0.8"
+              />
+            </g>
+            
+            {/* Rotating petals */}
+            <g className="demo-petals-cw" opacity="0.6">
+              {[0, 60, 120].map(angle => (
+                <g key={angle} transform={`rotate(${angle} 200 200)`}>
+                  <circle 
+                    cx="200" 
+                    cy="200" 
+                    r="120" 
+                    fill="none" 
+                    stroke="#aeb4b9" 
+                    strokeWidth="1.5"
+                  />
+                </g>
+              ))}
+            </g>
+            
+            {/* Orbits with travelers */}
+            <g className="demo-orbit-fast">
+              <ellipse 
+                cx="200" 
+                cy="200" 
+                rx="160" 
+                ry="100" 
+                fill="none" 
+                stroke="#111" 
+                strokeWidth="2.5" 
+                opacity="0.9"
+              />
+              <circle cx="360" cy="200" r="6" fill="#111" className="demo-traveller"/>
+            </g>
+            
+            <g className="demo-orbit-slow">
+              <ellipse 
+                cx="200" 
+                cy="200" 
+                rx="80" 
+                ry="140" 
+                fill="none" 
+                stroke="#666" 
+                strokeWidth="2"
+              />
+              <circle cx="280" cy="200" r="5" fill="#666" className="demo-traveller"/>
+            </g>
+            
+            {/* Pulsing core */}
+            <g className="demo-core-pulse">
+              <circle cx="200" cy="200" r="30" fill="#222" opacity="0.85"/>
+              <circle cx="200" cy="200" r="45" fill="none" stroke="#326FB7" strokeWidth="2" opacity="0.9"/>
+            </g>
+          </svg>
+        </div>
+        
+        {/* Current EMM Display */}
+        <div className="grid grid-cols-5 gap-3 text-center">
+          {Object.entries(demoEmm).map(([key, value]) => (
+            <div key={key} className="bg-white rounded-lg p-3 border">
+              <div className="text-lg font-mono font-bold text-blue-600">
+                {fmt(value)}
+              </div>
+              <div className="text-xs text-gray-500">
+                {key === 'mu' ? 'μ' : key === 'tau' ? 'τ' : key}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <h4 className="font-medium mb-2 text-blue-800">Live Animation Effects:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-blue-700">
+            <div>• <strong>Distance (d)</strong>: Outer field breathing</div>
+            <div>• <strong>Meaning (μ)</strong>: Traveler glow intensity</div>
+            <div>• <strong>Speed (s)</strong>: Rotation rates</div>
+            <div>• <strong>Patience (τ)</strong>: Animation smoothness</div>
+            <div>• <strong>Intention (k)</strong>: Core pulse strength</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderInsightsStep = () => {
+    const getTravelSuggestion = (emm) => {
+      if (emm.mu > 1.3 && emm.tau > 1.1) {
+        return {
+          type: "Contemplative Retreat",
+          reason: "High meaning + patience suggests you value deep, reflective experiences",
+          destinations: ["Dharamshala, India", "Sedona, Arizona", "Kyoto, Japan"],
+          activities: ["Meditation retreats", "Temple visits", "Nature walks"]
+        };
+      } else if (emm.d > 1.2 && emm.s > 1.3) {
+        return {
+          type: "Adventure Expedition", 
+          reason: "High distance + speed indicates appetite for active exploration",
+          destinations: ["Patagonia", "Nepal Himalayas", "New Zealand"],
+          activities: ["Trekking", "Rock climbing", "Extreme sports"]
+        };
+      } else if (emm.mu < 0.8 && emm.tau < 0.8) {
+        return {
+          type: "Restorative Escape",
+          reason: "Lower meaning + patience suggests need for gentle restoration",
+          destinations: ["Tuscany", "Bali", "Costa Rica"], 
+          activities: ["Spa retreats", "Beach time", "Gentle yoga"]
+        };
+      } else {
+        return {
+          type: "Cultural Immersion",
+          reason: "Balanced profile suggests readiness for rich cultural experiences",
+          destinations: ["Morocco", "Peru", "Vietnam"],
+          activities: ["Local homestays", "Cooking classes", "Historical tours"]
+        };
+      }
     };
-    const all = loadAll(); all.push(entry); saveAll(all); renderList(); clearForm();
-  });
 
-  // Export CSV (ready for your Timeline)
-  $('exportCSV').addEventListener('click', ()=>{
-    const rows = loadAll();
-    const header = ['date','title','score','tags','northStar','zeroWord','fiveNotes','ikigai','moved','winLesson','kindness','micromove','body'];
-    const csv = [header.join(',')].concat(rows.map(r=>{
-      return header.map(k=>csvCell(Array.isArray(r[k])? r[k].join('|') : (r[k]||''))).join(',');
-    })).join('\n');
-    download('twp_journal.csv', csv, 'text/csv');
-  });
+    const suggestion = getTravelSuggestion(currentEntry.emm);
 
-  function csvCell(s){ s = String(s).replace(/"/g,'""'); return `"${s}"`; }
-  function download(filename, content, mime){
-    const blob = new Blob([content],{type: mime || 'text/plain'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href), 500);
-  }
+    return (
+      <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-6 border border-green-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+            ✈️
+          </div>
+          <h3 className="text-lg font-semibold">AI Travel Insights</h3>
+        </div>
+        
+        <div className="space-y-4">
+          <p className="text-gray-700">
+            Based on your EMM pattern, here's what the AI recommends:
+          </p>
+          
+          <div className="bg-white rounded-lg p-4 border border-green-200">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-2xl">🎯</span>
+              <h4 className="text-lg font-semibold text-green-800">{suggestion.type}</h4>
+            </div>
+            
+            <p className="text-gray-700 mb-4">{suggestion.reason}</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h5 className="font-medium text-green-800 mb-2">Recommended Destinations:</h5>
+                <ul className="space-y-1">
+                  {suggestion.destinations.map((dest, index) => (
+                    <li key={index} className="text-sm text-gray-600 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                      {dest}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div>
+                <h5 className="font-medium text-green-800 mb-2">Suggested Activities:</h5>
+                <ul className="space-y-1">
+                  {suggestion.activities.map((activity, index) => (
+                    <li key={index} className="text-sm text-gray-600 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                      {activity}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
+            <h4 className="font-medium mb-2 text-teal-800">How it works:</h4>
+            <p className="text-sm text-teal-700">
+              The AI analyzes patterns across weeks/months of your EMM data to identify what types of 
+              experiences align with your authentic emotional needs and growth trajectory.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-  $('clearAll').addEventListener('click', ()=>{
-    if (confirm('Remove all saved pages from this device?')){ localStorage.removeItem('twp.journal.v1'); renderList(); }
-  });
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Travel Matrix: Interactive Demo
+          </h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            See how your daily journal reflections transform into personalized travel insights through 
+            beautiful, living mathematical visualizations.
+          </p>
+        </div>
 
-  renderList();
-})();
-</script>
-</body>
-</html>
+        {/* Progress Indicator */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-2">
+            {steps.map((_, index) => (
+              <React.Fragment key={index}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                  index === currentStep 
+                    ? 'bg-blue-600 text-white' 
+                    : index < currentStep
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {index + 1}
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`w-16 h-0.5 ${
+                    index < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                  }`}></div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        {/* Current Step */}
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              {steps[currentStep].title}
+            </h2>
+            <p className="text-gray-600 max-w-3xl mx-auto">
+              {steps[currentStep].description}
+            </p>
+          </div>
+
+          {/* Step Content */}
+          <div className={`transition-all duration-500 ${isAnimating ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
+            {steps[currentStep].component === 'journal' && renderJournalStep()}
+            {steps[currentStep].component === 'analysis' && renderAnalysisStep()}
+            {steps[currentStep].component === 'matrix' && renderMatrixStep()}
+            {steps[currentStep].component === 'insights' && renderInsightsStep()}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-center gap-4 mb-8">
+          <button 
+            onClick={prevStep}
+            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          >
+            ← Previous
+          </button>
+          <button 
+            onClick={nextStep}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Next →
+          </button>
+        </div>
+
+        {/* Sample Data Indicator */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+            📊 Currently showing: {currentEntry.title} ({currentEntry.date})
+          </div>
+          <p className="text-gray-500 text-sm mt-2">
+            This demo cycles through 4 different emotional states to show how the Matrix responds to your inner journey
+          </p>
+        </div>
+      </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        .demo-outer {
+          transform-origin: 50% 50%;
+          animation: demo-breathe calc(4s / var(--demo-tau)) ease-in-out infinite alternate;
+        }
+        
+        .demo-petals-cw {
+          transform-origin: 50% 50%;
+          animation: demo-rotate calc(20s / var(--demo-s)) linear infinite;
+        }
+        
+        .demo-orbit-fast {
+          transform-origin: 50% 50%;
+          animation: demo-rotate calc(10s / var(--demo-s)) linear infinite;
+        }
+        
+        .demo-orbit-slow {
+          transform-origin: 50% 50%;
+          animation: demo-rotate calc(15s / var(--demo-s)) linear infinite reverse;
+        }
+        
+        .demo-core-pulse {
+          transform-origin: 50% 50%;
+          animation: demo-pulse calc(2s / var(--demo-k)) ease-in-out infinite alternate;
+        }
+        
+        .demo-traveller {
+          filter: drop-shadow(0 0 calc(2px * var(--demo-mu)) rgba(50, 111, 183, calc(0.4 * var(--demo-mu))));
+        }
+
+        @keyframes demo-breathe {
+          from { transform: scale(calc(0.95 * var(--demo-d))); }
+          to { transform: scale(calc(1.05 * var(--demo-d))); }
+        }
+        
+        @keyframes demo-rotate {
+          to { transform: rotate(360deg); }
+        }
+        
+        @keyframes demo-pulse {
+          from { transform: scale(calc(0.9 + (var(--demo-k) - 1) * 0.1)); }
+          to { transform: scale(calc(1.1 + (var(--demo-k) - 1) * 0.2)); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default TravelMatrixDemo;
