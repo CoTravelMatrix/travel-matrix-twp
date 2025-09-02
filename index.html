@@ -53,6 +53,7 @@
       <div class="card pad">
         <h1>Travel Matrix — TWP</h1>
         <div class="small">EMM-driven animation: Distance (d), Meaning (μ), Speed (s), Time/Patience (τ), Intention (k).</div>
+        <div class="small">Your EMM Score (T): <span id="emmValue">53.00</span> (Cosmic Vine ~20)</div>
 
         <svg id="matrixSVG" class="stage" viewBox="0 0 600 600" aria-label="Travel Matrix">
           <g class="outer"><circle cx="300" cy="300" r="280" class="noFill blue thin"/></g>
@@ -124,6 +125,7 @@
           <button class="btn" data-preset="Explorer">Explorer</button>
           <button class="btn" data-preset="Connector">Connector</button>
           <button class="btn" data-preset="Transcend">Transcend</button>
+          <button class="btn" data-preset="Pre-Bang">Pre-Bang</button>
         </div>
         <div class="row" style="align-items:center">
           <input id="presetName" class="input" placeholder="Preset name" />
@@ -142,6 +144,11 @@
             <div class="small" id="now"></div>
           </div>
         </details>
+
+        <details style="margin-top:12px">
+          <summary>Why Infinite Motion?</summary>
+          <div class="small">Motion, like energy, is eternal—no beginning, no end. From pre-Big Bang dynamics to your next trip, it shapes existence. Travel with purpose!</div>
+        </details>
       </div>
     </div>
   </div>
@@ -154,18 +161,40 @@ window.addEventListener('DOMContentLoaded', function () {
 
   function bind(id, cssVar, labelId){
     const el = q(id), lab = q(labelId);
-    const update = () => { setVar(`--${cssVar}`, el.value); lab.textContent = fmt(el.value); saveState(); };
+    const update = () => { 
+      setVar(`--${cssVar}`, el.value); 
+      lab.textContent = fmt(el.value); 
+      try { saveState(); } catch(e) {} // Silent fail for local testing
+      updateEMM();
+    };
     el.addEventListener('input', update); update();
   }
   bind('d','d','vd'); bind('mu','mu','vmu'); bind('s','s','vs'); bind('tau','tau','vtau'); bind('k','k','vk');
 
+  // EMM Score Calculation
+  function updateEMM() {
+    const avg = (parseFloat(q('d').value) + parseFloat(q('mu').value) + parseFloat(q('s').value) + parseFloat(q('tau').value) + parseFloat(q('k').value)) / 5;
+    const t = avg * 50; // Scaled to 0-100 range, centered around ~53 for defaults
+    q('emmValue').textContent = fmt(t);
+  }
+  updateEMM();
+
   // Presets
   const KEY='twmatrix.presets.v1';
-  const defaults={Balanced:{d:1,mu:1,s:1,tau:1,k:1},Explorer:{d:1.3,mu:1.0,s:1.2,tau:0.9,k:1.1},Connector:{d:1.0,mu:1.4,s:0.9,tau:1.1,k:1.1},Transcend:{d:0.95,mu:1.2,s:0.8,tau:1.3,k:1.25}};
+  const defaults={
+    Balanced:{d:1,mu:1,s:1,tau:1,k:1},
+    Explorer:{d:1.3,mu:1.0,s:1.2,tau:0.9,k:1.1},
+    Connector:{d:1.0,mu:1.4,s:0.9,tau:1.1,k:1.1},
+    Transcend:{d:0.95,mu:1.2,s:0.8,tau:1.3,k:1.25},
+    'Pre-Bang':{d:1.5,mu:2.0,s:0.6,tau:1.5,k:1.6}
+  };
   const loadAll=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}};
   const saveAll=o=>localStorage.setItem(KEY,JSON.stringify(o));
   const state=()=>({d:+q('d').value,mu:+q('mu').value,s:+q('s').value,tau:+q('tau').value,k:+q('k').value});
-  const apply=o=>{['d','mu','s','tau','k'].forEach(k=>{if(typeof o[k]==='number') q(k).value=o[k]}); ['d','mu','s','tau','k'].forEach(id=>q(id).dispatchEvent(new Event('input')));};
+  const apply=o=>{
+    ['d','mu','s','tau','k'].forEach(k=>{if(typeof o[k]==='number') q(k).value=o[k]});
+    ['d','mu','s','tau','k'].forEach(id=>q(id).dispatchEvent(new Event('input')));
+  };
 
   document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const name=b.dataset.preset;apply(loadAll()[name]||defaults[name])});
   q('btnSavePreset').onclick=()=>{const name=(q('presetName').value||'').trim();if(!name)return alert('Name your preset.');const all=loadAll();all[name]=state();saveAll(all);alert('Saved preset: '+name)};
@@ -174,16 +203,22 @@ window.addEventListener('DOMContentLoaded', function () {
   // URL share
   function toQuery(s){return '?'+new URLSearchParams(s).toString()}
   function fromQuery(){const p=new URLSearchParams(location.search);const s={};['d','mu','s','tau','k'].forEach(k=>{if(p.has(k)) s[k]=+p.get(k)});return Object.keys(s).length?s:null}
-  function saveState(){ history.replaceState(null,'', toQuery(state())); }
+  function saveState(){ 
+    try { history.replaceState(null,'', toQuery(state())); } catch(e) {} // Silent for local
+  }
   const qs=fromQuery(); if(qs) apply(qs);
-  q('btnShare').onclick=()=>{ const link=location.origin+location.pathname+toQuery(state()); navigator.clipboard.writeText(link).then(()=>alert('Share link copied.')); };
+  q('btnShare').onclick=()=>{
+    let link;
+    try { link=location.origin+location.pathname+toQuery(state()); } catch(e) { link=toQuery(state()); } // Fallback for local
+    navigator.clipboard.writeText(link).then(()=>alert('Share link copied.'));
+  };
 
   // Snapshot
   q('btnSnapshot').onclick=()=>{ const svg=q('matrixSVG'); const s=new XMLSerializer().serializeToString(svg);
     const blob=new Blob([s],{type:'image/svg+xml;charset=utf-8'}); const url=URL.createObjectURL(blob);
     const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=1200; c.height=1200;
       const x=c.getContext('2d'); x.fillStyle=getComputedStyle(document.body).backgroundColor; x.fillRect(0,0,1200,1200);
-      x.drawImage(img,0,0,1200,1200); c.toBlob(b=>{const a=document.createElement('a'); a.download='travel-matrix.png'; a.href=URL.createObjectURL(b); a.click(); URL.revokeObjectURL(url);},'image/png'); };
+      x.drawImage(img,0,0,1200,1200); c.toBlob(b=>{const a=document.createElement('a'); a.download='travel-matrix.png'; a.href=URL.createObjectURL(b); a.click(); URL.revokeObjectURL(a.href); URL.revokeObjectURL(url);},'image/png'); };
     img.src=url; };
 
   // Reset
@@ -202,12 +237,14 @@ window.addEventListener('DOMContentLoaded', function () {
   const status = msg => { q('now').textContent = msg; };
 
   function parseCSV(text){
-    return text.trim().split(/\n+/).map(line=>{
-      const parts = line.split(/\s*,\s*/);
-      if (parts.length < 6) return null;
-      const [date,d,mu,s,tau,k]=parts;
-      const row = {date, d:+d, mu:+mu, s:+s, tau:+tau, k:+k};
-      return [row.d,row.mu,row.s,row.tau,row.k].every(v=>!Number.isNaN(v)) ? row : null;
+    return text.trim().split(/\n+/).map(line => {
+      const cleaned = line.trim();
+      if (!cleaned) return null;
+      const parts = cleaned.split(/[\s,]+/); // More robust splitting
+      if (parts.length !== 6) return null;
+      const [date, d, mu, s, tau, k] = parts;
+      const row = {date, d: +d, mu: +mu, s: +s, tau: +tau, k: +k};
+      return [row.d, row.mu, row.s, row.tau, row.k].every(v => !Number.isNaN(v)) ? row : null;
     }).filter(Boolean);
   }
 
