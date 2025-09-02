@@ -1,10 +1,37 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travel Matrix Timeline Test</title>
+  <style>
+    body { font-family: sans-serif; }
+    #matrixSVG { width:200px; height:200px; border:1px solid #333; margin:10px 0; }
+    input[type=range] { width: 100px; }
+    #now { margin:10px 0; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <h2>Timeline Test</h2>
+  <textarea id="csv" rows="5" cols="60" placeholder="Paste your timeline CSV data here"></textarea><br>
+  <button id="btnLoadCSV">Load CSV</button>
+  <button id="btnPlay">Play</button>
+  <button id="btnPause">Pause</button>
+  Speed: <input id="playSpeed" type="number" value="1" min="1" max="5"><br>
+  <svg id="matrixSVG"></svg>
+  <div>
+    <label>D: <input id="d" type="range" min="0" max="2" step="0.01"><span id="vd"></span></label><br>
+    <label>Mu: <input id="mu" type="range" min="0" max="2" step="0.01"><span id="vmu"></span></label><br>
+    <label>S: <input id="s" type="range" min="0" max="2" step="0.01"><span id="vs"></span></label><br>
+    <label>Tau: <input id="tau" type="range" min="0" max="2" step="0.01"><span id="vtau"></span></label><br>
+    <label>K: <input id="k" type="range" min="0" max="2" step="0.01"><span id="vk"></span></label>
+  </div>
+  <div id="now"></div>
+  <script>
 window.addEventListener('DOMContentLoaded', function () {
   const setVar = (name, val) => document.documentElement.style.setProperty(name, val);
   const fmt = x => Number(x).toFixed(2);
   const q = id => document.getElementById(id);
 
-  // Bind sliders -> CSS vars
   function bind(id, cssVar, labelId){
     const el=q(id), lab=q(labelId);
     const update=()=>{ setVar(`--${cssVar}`, el.value); lab.textContent=fmt(el.value); saveState(); };
@@ -12,51 +39,22 @@ window.addEventListener('DOMContentLoaded', function () {
   }
   bind('d','d','vd'); bind('mu','mu','vmu'); bind('s','s','vs'); bind('tau','tau','vtau'); bind('k','k','vk');
 
-  // Presets
-  const KEY='twmatrix.presets.v1';
-  const defaults={Balanced:{d:1,mu:1,s:1,tau:1,k:1},Explorer:{d:1.3,mu:1.0,s:1.2,tau:0.9,k:1.1},Connector:{d:1.0,mu:1.4,s:0.9,tau:1.1,k:1.1},Transcend:{d:0.95,mu:1.2,s:0.8,tau:1.3,k:1.25}};
-  const loadAll=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}};
-  const saveAll=o=>localStorage.setItem(KEY,JSON.stringify(o));
   const state=()=>({d:+q('d').value,mu:+q('mu').value,s:+q('s').value,tau:+q('tau').value,k:+q('k').value});
   const apply=o=>{['d','mu','s','tau','k'].forEach(k=>{if(typeof o[k]==='number') q(k).value=o[k]}); ['d','mu','s','tau','k'].forEach(id=>q(id).dispatchEvent(new Event('input')));};
-  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>apply(loadAll()[b.dataset.preset]||defaults[b.dataset.preset]));
-  q('btnSavePreset').onclick=()=>{const name=(q('presetName').value||'').trim(); if(!name) return alert('Name your preset.'); const all=loadAll(); all[name]=state(); saveAll(all); alert('Saved preset: '+name);};
-  q('btnLoadPreset').onclick=()=>{const all=Object.assign({},defaults,loadAll()); const pick=prompt('Type a preset name:\n'+Object.keys(all).join(', ')); if(pick&&all[pick]) apply(all[pick]);};
 
-  // URL share
-  function toQuery(s){return '?'+new URLSearchParams(s).toString()}
-  function fromQuery(){const p=new URLSearchParams(location.search); const s={}; ['d','mu','s','tau','k'].forEach(k=>{if(p.has(k)) s[k]=+p.get(k)}); return Object.keys(s).length?s:null;}
-  function saveState(){ history.replaceState(null,'', toQuery(state())); }
-  const qs=fromQuery(); if(qs) apply(qs);
-  q('btnShare').onclick=()=>{ const link=location.origin+location.pathname+toQuery(state()); navigator.clipboard.writeText(link).then(()=>alert('Share link copied.')); };
-
-  // Snapshot
-  q('btnSnapshot').onclick=()=>{ const svg=q('matrixSVG'); const s=new XMLSerializer().serializeToString(svg);
-    const blob=new Blob([s],{type:'image/svg+xml;charset=utf-8'}); const url=URL.createObjectURL(blob);
-    const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=1200; c.height=1200;
-      const x=c.getContext('2d'); x.fillStyle=getComputedStyle(document.body).backgroundColor; x.fillRect(0,0,1200,1200);
-      x.drawImage(img,0,0,1200,1200); c.toBlob(b=>{const a=document.createElement('a'); a.download='travel-matrix.png'; a.href=URL.createObjectURL(b); a.click(); URL.revokeObjectURL(url);},'image/png'); };
-    img.src=url; };
-
-  // Reset
-  q('btnReset').onclick=()=>apply({d:1,mu:1,s:1,tau:1,k:1});
-
-  // ===== Timeline: robust, visible, fool-proof =====
   let timeline=[]; let playId=null; let idx=0;
-
-  // Provide a default CSV so Play "works" even with nothing pasted
   const DEFAULT_CSV = [
     '2025-09-01,1.50,2.00,0.60,1.50,1.60',
     '2025-09-02,0.80,0.60,2.00,0.70,0.90',
     '2025-09-03,1.60,1.20,0.50,1.60,1.30',
     '2025-09-04,0.70,2.00,1.80,0.60,1.00'
-  ].join('\n');
+  ].join('\\n');
 
   const status = msg => { q('now').textContent = msg; };
 
   function parseCSV(text){
-    return text.trim().split(/\n+/).map(line=>{
-      const parts = line.split(/\s*,\s*/);
+    return text.trim().split(/\\n+/).map(line=>{
+      const parts = line.split(/\\s*,\\s*/);
       if (parts.length < 6) return null;
       const [date,d,mu,s,tau,k]=parts;
       const row = {date, d:+d, mu:+mu, s:+s, tau:+tau, k:+k};
@@ -86,7 +84,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
   q('btnPlay').onclick=()=>{
     if (playId) return;
-    if (!timeline.length){ // auto-load default if empty
+    if (!timeline.length){
       timeline = parseCSV(DEFAULT_CSV); idx=0; status(`${timeline.length} entries loaded (example)`); 
     }
     step();
@@ -95,5 +93,8 @@ window.addEventListener('DOMContentLoaded', function () {
   };
 
   q('btnPause').onclick=()=>{ if (playId){ clearInterval(playId); playId = null; status('Paused'); } };
+  window.onbeforeunload = ()=>{ if (playId) clearInterval(playId); };
 });
-</script>
+  </script>
+</body>
+</html>
