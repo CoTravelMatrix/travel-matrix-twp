@@ -40,12 +40,13 @@
     .matrix-svg{width:100%;max-width:400px;height:auto}
     #outer-field{transform-origin:200px 200px;animation:breathe calc(6s / var(--tau)) ease-in-out infinite alternate}
     #petals{transform-origin:200px 200px;animation:rotate calc(20s / var(--s)) linear infinite}
-    #orbit-fast{transform-origin:200px 200px;animation:rotate calc(10s / var(--d)) linear infinite}
-    #orbit-slow{transform-origin:200px 200px;animation:rotate calc(15s / var(--mu)) linear infinite reverse}
-    #core{transform-origin:200px 200px;animation:pulse calc(2s / var(--k)) ease-in-out infinite alternate}
-    @keyframes breathe{from{transform:scale(0.95);} to{transform:scale(1.05);}}
+    #orbit-fast{transform-origin:200px 200px;animation:rotate calc(10s / var(--s)) linear infinite}
+    #orbit-slow{transform-origin:200px 200px;animation:rotate calc(15s / var(--s)) linear infinite reverse}
+    #traveller-fast,#traveller-slow{filter:drop-shadow(0 0 calc(4px * var(--mu)) #326FB7);}
+    #core{transform-origin:200px 200px;animation:pulse 2s ease-in-out infinite alternate}
+    @keyframes breathe{from{transform:scale(calc(0.95 * var(--d)));} to{transform:scale(calc(1.05 * var(--d)));}}
     @keyframes rotate{to{transform:rotate(360deg);}}
-    @keyframes pulse{from{transform:scale(0.9);} to{transform:scale(1.1);}}
+    @keyframes pulse{from{transform:scale(calc(0.9 * var(--k)));} to{transform:scale(calc(1.1 * var(--k)));}}
 
     /* Respect OS reduced motion */
     @media (prefers-reduced-motion: reduce){
@@ -101,40 +102,7 @@
           <h2>Today</h2>
           <p class="muted">Two silent minutes. Say what mattered. The Matrix will listen.</p>
 
-          <div class="matrix-container">
-            <svg id="matrix-svg" viewBox="0 0 400 400" class="matrix-svg">
-              <!-- Background -->
-              <rect width="400" height="400" fill="#f8fafc" />
-
-              <!-- Outer breathing field -->
-              <g id="outer-field">
-                <circle cx="200" cy="200" r="180" fill="none" stroke="#326FB7" stroke-width="2" opacity="0.8"/>
-              </g>
-
-              <!-- Rotating petals -->
-              <g id="petals" opacity="0.6">
-                <circle cx="200" cy="200" r="120" fill="none" stroke="#aeb4b9" stroke-width="1.5"/>
-                <circle cx="200" cy="200" r="100" fill="none" stroke="#aeb4b9" stroke-width="1.5"/>
-              </g>
-
-              <!-- Orbits with travellers -->
-              <g id="orbit-fast">
-                <ellipse cx="200" cy="200" rx="160" ry="100" fill="none" stroke="#111" stroke-width="2.5"/>
-                <circle id="traveller-fast" cx="360" cy="200" r="6" fill="#111"/>
-              </g>
-
-              <g id="orbit-slow">
-                <ellipse cx="200" cy="200" rx="80" ry="140" fill="none" stroke="#666" stroke-width="2"/>
-                <circle id="traveller-slow" cx="280" cy="200" r="5" fill="#666"/>
-              </g>
-
-              <!-- Pulsing core -->
-              <g id="core">
-                <circle cx="200" cy="200" r="30" fill="#222" opacity="0.85"/>
-                <circle cx="200" cy="200" r="45" fill="none" stroke="#326FB7" stroke-width="2" opacity="0.9"/>
-              </g>
-            </svg>
-          </div>
+          <div class="matrix-container"><div id="matrix-root"></div></div>
 
           <details>
             <summary>Inner Compass (advanced)</summary>
@@ -209,7 +177,11 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
-  <script>
+  <script type="module">
+    import React from "https://esm.sh/react@18";
+    import { createRoot } from "https://esm.sh/react-dom@18/client";
+    import LivingMatrix from "./src/components/LivingMatrix.jsx";
+
     // Configure PDF.js worker so parsing runs without cross-origin issues
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
     // ---------- State ----------
@@ -221,6 +193,11 @@
       photos:  JSON.parse(localStorage.getItem('mjj.photos')||'[]'), // [{dataURL, date}]
       trips:   JSON.parse(localStorage.getItem('mjj.trips')||'[]')   // [{date, place, activity}]
     };
+
+    const matrixRoot = createRoot(document.getElementById('matrix-root'));
+    function renderMatrix(){
+      matrixRoot.render(<LivingMatrix {...state.emm} />);
+    }
 
     // ---------- EMM helpers ----------
     function parseParams(){
@@ -254,6 +231,7 @@
         input.addEventListener('input', ()=>{
           const next = {...state.emm, [k]: parseFloat(input.value)};
           applyEMM(next);
+          renderMatrix();
           history.replaceState(null,'', location.pathname + '?' + new URLSearchParams(next).toString());
         });
       });
@@ -268,6 +246,7 @@
 
       const emmFromTags = tags.length ? tagsToEMM(tags, state.emm) : state.emm;
       applyEMM(emmFromTags);
+      renderMatrix();
 
       const entry = {
         id: Date.now(),
@@ -452,6 +431,7 @@
     // ---------- Init ----------
     parseParams();
     applyEMM(state.emm);
+    renderMatrix();
     wireInnerCompass(); wireTabs();
     renderRecent(); renderTrips(); renderThumbs();
     renderPreviewRows(state.trips.map(t=>({date:t.date, detail:t.place + (t.activity?': '+t.activity:'')})));
