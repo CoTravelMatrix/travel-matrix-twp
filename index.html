@@ -1,325 +1,308 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Travel Matrix — TWP (Travel With Purpose)</title>
+<meta charset="utf-8">
+<title>My Journey Journal — Travel With Purpose</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  :root{ --blue:#326FB7; --ink:#111; --paper:#F6F7F8; --line:#E7EAEE;
-         --d:1; --mu:1; --s:1; --tau:1; --k:1; }
+  :root{ --blue:#326FB7; --ink:#111; --paper:#F6F7F8; --line:#E7EAEE; }
   html,body{margin:0;background:var(--paper);font:11pt Calibri, Arial, sans-serif;color:var(--ink)}
-  .wrap{max-width:980px;margin:24px auto;padding:0 12px}
-  .grid{display:grid;grid-template-columns:1fr;gap:16px}
-  @media(min-width:980px){.grid{grid-template-columns:620px 1fr}}
-  .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.07)}
+  .wrap{max-width:980px;margin:28px auto;padding:0 14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.07);margin-bottom:16px}
   .pad{padding:14px}
-  h1{font-size:18px;margin:0 0 6px} h2{font-size:14px;margin:12px 0 8px}
+  h1{font-size:18px;margin:0 0 6px}
+  h2{font-size:16px;margin:10px 0 6px}
   .small{font-size:12px;color:#47515a}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .ctrl{border:1px solid var(--line);border-radius:12px;padding:12px}
-  label{display:block;font-weight:600;margin:0 0 2px}
-  input[type=range]{width:100%}
+  .muted{color:#6b7580}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .col{flex:1 1 260px}
+  input[type=text], input[type=date], textarea, select{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff
+  }
+  textarea{min-height:96px}
   .btn{cursor:pointer;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
   .btn:hover{box-shadow:0 2px 6px rgba(0,0,0,.08)}
   .btn.blue{border-color:var(--blue);color:#fff;background:var(--blue)}
-  .stack{display:flex;flex-wrap:wrap;gap:8px}
-  .input{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit}
+  .tag{display:inline-block;padding:4px 8px;border:1px solid var(--line);border-radius:999px;margin:2px 4px;font-size:12px;cursor:pointer}
+  .tag.active{border-color:var(--blue);color:#fff;background:var(--blue)}
   .right{display:flex;justify-content:flex-end;gap:8px}
-  details summary{cursor:pointer;font-weight:600}
-
-  @keyframes breathe {from{transform:scale(calc(0.98*var(--d)))} to{transform:scale(calc(1.02*var(--d)))}} 
-  @keyframes rotateCW {to{transform:rotate(360deg)}}
-  @keyframes rotateCCW {to{transform:rotate(-360deg)}}
-  @keyframes pulseCore {from{transform:scale(calc(1 + (var(--k)-1)*0.25))} to{transform:scale(calc(1.08 + (var(--k)-1)*0.35))}}
-  @keyframes orbit {to{transform:rotate(360deg)}}
-
-  .stage{width:100%;display:block}
-  .outer{transform-origin:50% 50%;animation:breathe calc(6s/var(--tau)) ease-in-out infinite alternate}
-  .petalsCW{transform-origin:50% 50%;animation:rotateCW calc(40s/var(--s)) linear infinite}
-  .petalsCCW{transform-origin:50% 50%;animation:rotateCCW calc(36s/var(--s)) linear infinite}
-  .orbit{transform-origin:50% 50%;animation:orbit calc(24s/var(--s)) linear infinite}
-  .orbit.slow{animation-duration:calc(30s/var(--s))}
-  .orbit.fast{animation-duration:calc(18s/var(--s))}
-  .corePulse{transform-origin:50% 50%;animation:pulseCore 2.8s ease-in-out infinite alternate}
-  .traveller{filter:drop-shadow(0 0 calc(1.5px*var(--mu)) rgba(50,111,183,.25))}
-  .noFill{fill:none} .thin{stroke-width:1.2} .med{stroke-width:2.2} .thic{stroke-width:3}
-  .ink{stroke:#111} .mid{stroke:#aeb4b9} .blue{stroke:#326FB7}
+  .list{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}
+  .entry{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+  .pill{display:inline-block;background:#eef4fb;color:#204c7a;border-radius:999px;padding:2px 8px;font-size:11px;margin-right:6px}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  @media (max-width:720px){.grid{grid-template-columns:1fr}}
+  .hint{font-size:11px;color:#667;line-height:1.4}
+  .hr{height:1px;background:var(--line);margin:10px 0}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="grid">
-      <!-- Matrix -->
-      <div class="card pad">
-        <h1>Travel Matrix — TWP</h1>
-        <div class="small">EMM-driven animation: Distance (d), Meaning (μ), Speed (s), Time/Patience (τ), Intention (k).</div>
-        <div class="small">Your EMM Score (T): <span id="emmValue">53.00</span> (Cosmic Vine ~20)</div>
+<div class="wrap">
 
-        <svg id="matrixSVG" class="stage" viewBox="0 0 600 600" aria-label="Travel Matrix">
-          <g class="outer"><circle cx="300" cy="300" r="280" class="noFill blue thin"/></g>
-          <g class="petalsCW mid thin noFill" opacity="0.85">
-            <circle cx="300" cy="300" r="210"/>
-            <g transform="rotate(30,300,300)"><circle cx="300" cy="300" r="210"/></g>
-            <g transform="rotate(60,300,300)"><circle cx="300" cy="300" r="210"/></g>
-            <g transform="rotate(90,300,300)"><circle cx="300" cy="300" r="210"/></g>
-            <g transform="rotate(120,300,300)"><circle cx="300" cy="300" r="210"/></g>
-            <g transform="rotate(150,300,300)"><circle cx="300" cy="300" r="210"/></g>
-          </g>
-          <g class="petalsCCW blue thin noFill" opacity="0.65">
-            <g transform="rotate(15,300,300)"><circle cx="300" cy="300" r="170"/></g>
-            <g transform="rotate(45,300,300)"><circle cx="300" cy="300" r="170"/></g>
-            <g transform="rotate(75,300,300)"><circle cx="300" cy="300" r="170"/></g>
-          </g>
-          <g class="orbit fast">
-            <ellipse cx="300" cy="300" rx="250" ry="150" class="noFill ink thic" opacity="0.9"/>
-            <circle cx="550" cy="300" r="10" class="traveller" fill="#111"/>
-          </g>
-          <g class="orbit">
-            <ellipse cx="300" cy="300" rx="230" ry="210" class="noFill mid med"/>
-            <circle cx="70" cy="300" r="10" class="traveller" fill="#111"/>
-          </g>
-          <g class="orbit slow">
-            <ellipse cx="300" cy="300" rx="120" ry="260" class="noFill ink med"/>
-            <circle cx="420" cy="300" r="10" class="traveller" fill="#111"/>
-          </g>
-          <g class="corePulse">
-            <circle cx="300" cy="300" r="50" fill="#222" opacity="0.88"/>
-            <circle cx="300" cy="300" r="70" class="noFill blue med" opacity="0.95"/>
-          </g>
-        </svg>
+  <!-- Header -->
+  <div class="card pad">
+    <h1>My Journey Journal</h1>
+    <div class="small">
+      Travel with Purpose begins at Zero—calm the chaos, centre the “you”, and move piece-by-piece from puzzle to picture. 
+      Use the prompts below to reflect, then log an entry. Your North Star steadies the course; the tree grows with each note. 
+    </div>
+  </div>
 
-        <div class="right" style="margin-top:10px">
-          <button id="btnSnapshot" class="btn">Snapshot PNG</button>
-          <button id="btnShare" class="btn">Copy Share Link</button>
-          <button id="btnReset" class="btn">Reset</button>
-        </div>
+  <!-- North Star / Mental Compass -->
+  <div class="card pad" id="compass">
+    <h2>North Star — Mental Compass</h2>
+    <div class="row">
+      <div class="col">
+        <label class="small">Today’s North Star (one line)</label>
+        <input type="text" id="northStar" placeholder="What quietly matters most today?">
       </div>
-
-      <!-- Controls -->
-      <div class="card pad">
-        <h2>EMM Controls</h2>
-        <div class="row">
-          <div class="ctrl">
-            <label>Distance (d): <span id="vd" class="small">1.00</span></label>
-            <input id="d" type="range" min="0.7" max="1.6" step="0.01" value="1" />
-            <label>Meaning (μ): <span id="vmu" class="small">1.00</span></label>
-            <input id="mu" type="range" min="0.5" max="2.0" step="0.01" value="1" />
-            <label>Speed (s): <span id="vs" class="small">1.00</span></label>
-            <input id="s" type="range" min="0.5" max="2.0" step="0.01" value="1" />
-          </div>
-          <div class="ctrl">
-            <label>Time / Patience (τ): <span id="vtau" class="small">1.00</span></label>
-            <input id="tau" type="range" min="0.6" max="1.6" step="0.01" value="1" />
-            <label>Intention (k): <span id="vk" class="small">1.00</span></label>
-            <input id="k" type="range" min="0.8" max="1.6" step="0.01" value="1" />
-            <div class="small" style="margin-top:6px">
-              Higher <b>d</b> breathes the field; higher <b>μ</b> brightens traveller glow;
-              higher <b>s</b> speeds rotation; higher <b>τ</b> smooths wobble; higher <b>k</b> strengthens the core pulse.
-            </div>
-          </div>
-        </div>
-
-        <h2>Presets</h2>
-        <div class="stack" style="margin-bottom:8px">
-          <button class="btn" data-preset="Balanced">Balanced</button>
-          <button class="btn" data-preset="Explorer">Explorer</button>
-          <button class="btn" data-preset="Connector">Connector</button>
-          <button class="btn" data-preset="Transcend">Transcend</button>
-          <button class="btn" data-preset="Pre-Bang">Pre-Bang</button>
-        </div>
-        <div class="row" style="align-items:center">
-          <input id="presetName" class="input" placeholder="Preset name" />
-          <div class="right"><button id="btnSavePreset" class="btn">Save Preset</button><button id="btnLoadPreset" class="btn">Load Presets</button></div>
-        </div>
-
-        <details style="margin-top:12px">
-          <summary>Timeline (paste CSV – date,d,mu,s,tau,k)</summary>
-          <div class="small" style="margin:6px 0">Example:<br>2025-09-01,1.2,1.4,0.9,1.1,1.3</div>
-          <textarea id="csv" class="input" rows="6" placeholder="date,d,mu,s,tau,k"></textarea>
-          <div class="stack" style="margin-top:8px">
-            <button id="btnLoadCSV" class="btn">Load Timeline</button>
-            <button id="btnPlay" class="btn blue">Play</button>
-            <button id="btnPause" class="btn">Pause</button>
-            <label class="small">Speed <input id="playSpeed" type="range" min="0.2" max="2" value="1" step="0.1"></label>
-            <div class="small" id="now"></div>
-          </div>
-        </details>
-
-        <details style="margin-top:12px">
-          <summary>Why Infinite Motion?</summary>
-          <div class="small">Motion, like energy, is eternal—no beginning, no end. From pre-Big Bang dynamics to your next trip, it shapes existence. Travel with purpose!</div>
-        </details>
+      <div class="col">
+        <label class="small">State at Zero (one word)</label>
+        <input type="text" id="zeroWord" placeholder="Calm / Curious / Patient …">
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div class="grid">
+      <div>
+        <label class="small">5 Components check-in (quick notes)</label>
+        <textarea id="fiveNotes" placeholder="Where? When? How? How much? Who?"></textarea>
+        <div class="hint muted">The 5 components frame the plan; YOU is the living centre. Align them lightly, not rigidly.</div>
+      </div>
+      <div>
+        <label class="small">Ikigai lens (what I love / am good at / world needs / can be paid for)</label>
+        <textarea id="ikigai" placeholder="One sentence per quadrant, if helpful."></textarea>
+        <div class="hint muted">A glance, not an exam. We’re seeking direction, not judgement.</div>
       </div>
     </div>
   </div>
+
+  <!-- Two-Minute Evening Pager -->
+  <div class="card pad">
+    <h2>Two-Minute Evening Pager</h2>
+    <div class="grid">
+      <div>
+        <label class="small">What moved today? (1–2 lines)</label>
+        <textarea id="moved" placeholder="The tiny motion that mattered…"></textarea>
+      </div>
+      <div>
+        <label class="small">One win, one lesson</label>
+        <textarea id="winLesson" placeholder="Win → …  Lesson → …"></textarea>
+      </div>
+      <div>
+        <label class="small">One kindness given</label>
+        <textarea id="kindness" placeholder="To self or others."></textarea>
+      </div>
+      <div>
+        <label class="small">Tomorrow’s micro-move</label>
+        <textarea id="micromove" placeholder="So small it’s almost silly."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Random Hearts (prompt picker) -->
+  <div class="card pad">
+    <h2>Random Hearts — Prompt Picker</h2>
+    <div class="row">
+      <button class="btn" data-prompt="purpose">North Star: Purpose</button>
+      <button class="btn" data-prompt="excitement">Fast Orbit: Excitement</button>
+      <button class="btn" data-prompt="connection">Medium Orbit: Connection</button>
+      <button class="btn" data-prompt="reflection">Slow Orbit: Reflection</button>
+    </div>
+    <div id="promptBox" class="small muted" style="margin-top:8px"></div>
+  </div>
+
+  <!-- Emotions Glossary (tags that drive the score) -->
+  <div class="card pad">
+    <h2>Feelings & Signals — Tag what’s present</h2>
+    <div class="hint muted" style="margin-bottom:6px">
+      Tap a few words below (edit list anytime). Tags don’t define you; they reveal conditions around the journey.
+    </div>
+    <div id="tags" style="margin-bottom:8px"></div>
+    <div class="row">
+      <div class="col">
+        <textarea id="glossary" class="small" style="min-height:70px"
+          placeholder="Edit feelings list here, comma-separated…">Calm, Curious, Excited, Grateful, Connected, Grounded, Overwhelmed, Tired, Anxious, Disappointed, Lonely, Hopeful, Brave, Tender, Playful</textarea>
+      </div>
+      <div class="col right">
+        <button class="btn" id="applyGlossary">Update Words</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Journal Entry -->
+  <div class="card pad">
+    <h2>Write Today’s Entry</h2>
+    <div class="row">
+      <div class="col"><label class="small">Date</label><input type="date" id="date"></div>
+      <div class="col"><label class="small">Title</label><input type="text" id="title" placeholder="Give the page a name"></div>
+    </div>
+    <label class="small" style="margin-top:8px;display:block">Your story</label>
+    <textarea id="body" placeholder="What’s the picture the puzzle is pointing to? Where’s the seed pushing up?"></textarea>
+    <div class="row" style="align-items:center;margin-top:8px">
+      <div class="col small muted">Selected tags: <span id="chosen" class="pill"></span></div>
+      <div class="col right">
+        <button class="btn" id="scoreBtn">Score Preview</button>
+        <button class="btn blue" id="saveBtn">Save Entry</button>
+      </div>
+    </div>
+    <div id="scoreLine" class="small muted" style="margin-top:6px"></div>
+  </div>
+
+  <!-- Entries List + Export -->
+  <div class="card pad">
+    <div class="row" style="align-items:center">
+      <h2 style="flex:1">Your Pages</h2>
+      <div class="right">
+        <button class="btn" id="exportCSV">Export CSV</button>
+        <button class="btn" id="clearAll">Clear All (local)</button>
+      </div>
+    </div>
+    <div class="list" id="entries"></div>
+    <div class="hint muted">Stored on your device. Export to feed the Matrix Timeline later.</div>
+  </div>
+
+  <div class="small muted" style="text-align:center;margin:18px 0">
+    © CoTravel — Travel with Purpose. Journal structure inspired by your Travel Matrix (puzzle + tree, Zero→Flow, 5 components, Ikigai, Journey Journaling). 
+  </div>
+
+</div>
 
 <script>
-window.addEventListener('DOMContentLoaded', function () {
-  const setVar = (name, val) => document.documentElement.style.setProperty(name, val);
-  const fmt = x => Number(x).toFixed(2);
-  const q = id => document.getElementById(id);
+(function(){
+  const $ = (id)=>document.getElementById(id);
+  const todayISO = ()=> new Date().toISOString().slice(0,10);
+  $('date').value = todayISO();
 
-  function bind(id, cssVar, labelId){
-    const el = q(id), lab = q(labelId);
-    const update = () => { 
-      setVar(`--${cssVar}`, el.value); 
-      lab.textContent = fmt(el.value); 
-      try { saveState(); } catch(e) {} // Silent fail for local testing
-      updateEMM();
+  // Random Hearts (your tone)
+  const PROMPTS = {
+    purpose: 'North Star: What quietly matters most today? Name the smallest move that honours it.',
+    excitement: 'Excitement: Where did curiosity spark? How could you keep a gentle flame without burning out?',
+    connection: 'Connection: Who or what felt like good company? What condition helped it happen?',
+    reflection: 'Reflection: What needs grace or fallow time? Where can you pause without quitting?'
+  };
+  document.querySelectorAll('[data-prompt]').forEach(b=>{
+    b.addEventListener('click', ()=>{ $('promptBox').textContent = PROMPTS[b.dataset.prompt]; });
+  });
+
+  // Glossary → clickable tags
+  function renderTags(){
+    const box = $('tags'); box.innerHTML = '';
+    const words = $('glossary').value.split(',').map(s=>s.trim()).filter(Boolean);
+    words.forEach(w=>{
+      const span = document.createElement('span');
+      span.className = 'tag'; span.textContent = w;
+      span.addEventListener('click', ()=>{ span.classList.toggle('active'); renderChosen(); });
+      box.appendChild(span);
+    });
+  }
+  function renderChosen(){
+    const chosen = [...document.querySelectorAll('#tags .tag.active')].map(el=>el.textContent);
+    $('chosen').textContent = chosen.join(' · ');
+  }
+  $('applyGlossary').addEventListener('click', renderTags);
+  renderTags();
+
+  // Micro score (transparent, not a verdict)
+  function computeScore(){
+    const tags = [...document.querySelectorAll('#tags .tag.active')].map(el=>el.textContent.toLowerCase());
+    const positives = ['calm','curious','grateful','connected','grounded','hopeful','brave','tender','playful','excited'];
+    const negatives = ['overwhelmed','tired','anxious','disappointed','lonely'];
+    let pos = tags.filter(t=>positives.includes(t)).length;
+    let neg = tags.filter(t=>negatives.includes(t)).length;
+    const base = 50 + (pos*8) - (neg*8);
+    const clamp = Math.max(0, Math.min(100, base));
+    return Math.round(clamp);
+  }
+  $('scoreBtn').addEventListener('click', ()=>{
+    $('scoreLine').textContent = 'Signal score (0–100): ' + computeScore() + ' — a weather report, not a judgement.';
+  });
+
+  // Save entry (localStorage)
+  function loadAll(){ try{return JSON.parse(localStorage.getItem('twp.journal.v1'))||[]}catch(e){return[];} }
+  function saveAll(arr){ localStorage.setItem('twp.journal.v1', JSON.stringify(arr)); }
+  function clearForm(){
+    $('title').value=''; $('body').value=''; $('moved').value=''; $('winLesson').value=''; $('kindness').value=''; $('micromove').value='';
+    document.querySelectorAll('#tags .tag.active').forEach(el=>el.classList.remove('active')); renderChosen(); $('scoreLine').textContent='';
+  }
+  function renderList(){
+    const box = $('entries'); box.innerHTML='';
+    const all = loadAll().sort((a,b)=>b.date.localeCompare(a.date));
+    all.forEach((e,i)=>{
+      const div = document.createElement('div'); div.className='entry';
+      div.innerHTML = `
+        <div class="row" style="align-items:center">
+          <div class="small muted" style="flex:1">${e.date} — <strong>${escapeHtml(e.title||'Untitled')}</strong></div>
+          <div class="pill">Score ${e.score}</div>
+          <button class="btn" data-del="${e.id}">Delete</button>
+        </div>
+        <div class="small" style="margin:6px 0">${e.tags.map(t=>`<span class="pill">${escapeHtml(t)}</span>`).join(' ')}</div>
+        <div class="small muted">${escapeHtml(e.northStar||'')}</div>
+        <div class="hr"></div>
+        <div>${nl2br(escapeHtml(e.body||''))}</div>
+        <div class="hr"></div>
+        <div class="grid small muted">
+          <div><strong>Moved:</strong> ${nl2br(escapeHtml(e.moved||''))}</div>
+          <div><strong>Win/Lesson:</strong> ${nl2br(escapeHtml(e.winLesson||''))}</div>
+          <div><strong>Kindness:</strong> ${nl2br(escapeHtml(e.kindness||''))}</div>
+          <div><strong>Tomorrow’s micro-move:</strong> ${nl2br(escapeHtml(e.micromove||''))}</div>
+        </div>
+      `;
+      box.appendChild(div);
+    });
+    box.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-del');
+        const next = loadAll().filter(e=>e.id!==id); saveAll(next); renderList();
+      });
+    });
+  }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function nl2br(s){ return (s||'').replace(/\n/g,'<br>'); }
+  function uuid(){ return 'id-'+Math.random().toString(36).slice(2,10); }
+
+  $('saveBtn').addEventListener('click', ()=>{
+    const tags = [...document.querySelectorAll('#tags .tag.active')].map(el=>el.textContent);
+    const entry = {
+      id: uuid(),
+      date: $('date').value || todayISO(),
+      title: $('title').value.trim(),
+      body: $('body').value,
+      tags,
+      score: computeScore(),
+      northStar: $('northStar').value,
+      zeroWord: $('zeroWord').value,
+      fiveNotes: $('fiveNotes').value,
+      ikigai: $('ikigai').value,
+      moved: $('moved').value,
+      winLesson: $('winLesson').value,
+      kindness: $('kindness').value,
+      micromove: $('micromove').value
     };
-    el.addEventListener('input', update); update();
-  }
-  bind('d','d','vd'); bind('mu','mu','vmu'); bind('s','s','vs'); bind('tau','tau','vtau'); bind('k','k','vk');
+    const all = loadAll(); all.push(entry); saveAll(all); renderList(); clearForm();
+  });
 
-  // EMM Score Calculation
-  function updateEMM() {
-    const avg = (parseFloat(q('d').value) + parseFloat(q('mu').value) + parseFloat(q('s').value) + parseFloat(q('tau').value) + parseFloat(q('k').value)) / 5;
-    const t = avg * 50; // Scaled to 0-100 range, centered around ~53 for defaults
-    q('emmValue').textContent = fmt(t);
-  }
-  updateEMM();
+  // Export CSV (ready for your Timeline)
+  $('exportCSV').addEventListener('click', ()=>{
+    const rows = loadAll();
+    const header = ['date','title','score','tags','northStar','zeroWord','fiveNotes','ikigai','moved','winLesson','kindness','micromove','body'];
+    const csv = [header.join(',')].concat(rows.map(r=>{
+      return header.map(k=>csvCell(Array.isArray(r[k])? r[k].join('|') : (r[k]||''))).join(',');
+    })).join('\n');
+    download('twp_journal.csv', csv, 'text/csv');
+  });
 
-  // Presets
-  const KEY='twmatrix.presets.v1';
-  const defaults={
-    Balanced:{d:1,mu:1,s:1,tau:1,k:1},
-    Explorer:{d:1.3,mu:1.0,s:1.2,tau:0.9,k:1.1},
-    Connector:{d:1.0,mu:1.4,s:0.9,tau:1.1,k:1.1},
-    Transcend:{d:0.95,mu:1.2,s:0.8,tau:1.3,k:1.25},
-    'Pre-Bang':{d:1.5,mu:2.0,s:0.6,tau:1.5,k:1.6}
-  };
-  const loadAll=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}};
-  const saveAll=o=>localStorage.setItem(KEY,JSON.stringify(o));
-  const state=()=>({d:+q('d').value,mu:+q('mu').value,s:+q('s').value,tau:+q('tau').value,k:+q('k').value});
-  const apply=o=>{
-    ['d','mu','s','tau','k'].forEach(k=>{if(typeof o[k]==='number') q(k).value=o[k]});
-    ['d','mu','s','tau','k'].forEach(id=>q(id).dispatchEvent(new Event('input')));
-  };
-<!-- TWP: Journal MVP -->
-<div id="twpJournal" style="margin-top:14px;border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff">
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <strong>North Star</strong>
-    <input id="twpNorthStar" type="text" placeholder="I am moving with intention toward…"
-           style="flex:1;min-width:260px;padding:6px 8px;border:1px solid #dcdfe4;border-radius:8px">
-    <span style="font-size:12px;color:#47515a">EMM:</span>
-    <span id="twpEmm" style="font-variant-numeric:tabular-nums">0.00</span>
-    <button id="twpPromptBtn" style="padding:6px 10px;border:1px solid #dcdfe4;border-radius:8px;background:#fff;cursor:pointer">
-      Random Heart
-    </button>
-  </div>
-
-  <details style="margin-top:10px">
-    <summary style="cursor:pointer;font-weight:600">2-Minute Pager</summary>
-    <div style="margin-top:8px;display:grid;gap:6px">
-      <label><input type="checkbox" id="twpQ1"> Motion — I moved the story on (how?)</label>
-      <label><input type="checkbox" id="twpQ2"> Grace — I kept my dignity and my tongue</label>
-      <label><input type="checkbox" id="twpQ3"> Timing — I was where I needed to be</label>
-      <label><input type="checkbox" id="twpQ4"> Intention — I allowed what I asked for</label>
-      <label><input type="checkbox" id="twpQ5"> Proof — I demonstrated my theory in practice</label>
-      <textarea id="twpNotes" rows="3" placeholder="One line of evidence…"
-                style="padding:8px;border:1px solid #dcdfe4;border-radius:8px"></textarea>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button id="twpSave"  style="padding:6px 10px;border:1px solid #dcdfe4;border-radius:8px;background:#fff;cursor:pointer">Save</button>
-        <button id="twpExport" style="padding:6px 10px;border:1px solid #dcdfe4;border-radius:8px;background:#fff;cursor:pointer">Export</button>
-      </div>
-      <div id="twpStatus" style="font-size:12px;color:#47515a"></div>
-    </div>
-  </details>
-</div>
-
-<!-- Prompt modal -->
-<div id="twpModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999">
-  <div style="max-width:560px;margin:10vh auto;background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <strong id="twpPromptTitle">Random Heart</strong>
-      <button id="twpClose" style="border:0;background:transparent;font-size:20px;cursor:pointer">×</button>
-    </div>
-    <p id="twpPromptText" style="margin:10px 0 0 0"></p>
-  </div>
-</div>
-
-  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const name=b.dataset.preset;apply(loadAll()[name]||defaults[name])});
-  q('btnSavePreset').onclick=()=>{const name=(q('presetName').value||'').trim();if(!name)return alert('Name your preset.');const all=loadAll();all[name]=state();saveAll(all);alert('Saved preset: '+name)};
-  q('btnLoadPreset').onclick=()=>{const all=Object.assign({},defaults,loadAll());const pick=prompt('Type a preset name to load:\n'+Object.keys(all).join(', ')); if(pick&&all[pick]) apply(all[pick]);};
-
-  // URL share
-  function toQuery(s){return '?'+new URLSearchParams(s).toString()}
-  function fromQuery(){const p=new URLSearchParams(location.search);const s={};['d','mu','s','tau','k'].forEach(k=>{if(p.has(k)) s[k]=+p.get(k)});return Object.keys(s).length?s:null}
-  function saveState(){ 
-    try { history.replaceState(null,'', toQuery(state())); } catch(e) {} // Silent for local
-  }
-  const qs=fromQuery(); if(qs) apply(qs);
-  q('btnShare').onclick=()=>{
-    let link;
-    try { link=location.origin+location.pathname+toQuery(state()); } catch(e) { link=toQuery(state()); } // Fallback for local
-    navigator.clipboard.writeText(link).then(()=>alert('Share link copied.'));
-  };
-
-  // Snapshot
-  q('btnSnapshot').onclick=()=>{ const svg=q('matrixSVG'); const s=new XMLSerializer().serializeToString(svg);
-    const blob=new Blob([s],{type:'image/svg+xml;charset=utf-8'}); const url=URL.createObjectURL(blob);
-    const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=1200; c.height=1200;
-      const x=c.getContext('2d'); x.fillStyle=getComputedStyle(document.body).backgroundColor; x.fillRect(0,0,1200,1200);
-      x.drawImage(img,0,0,1200,1200); c.toBlob(b=>{const a=document.createElement('a'); a.download='travel-matrix.png'; a.href=URL.createObjectURL(b); a.click(); URL.revokeObjectURL(a.href); URL.revokeObjectURL(url);},'image/png'); };
-    img.src=url; };
-
-  // Reset
-  q('btnReset').onclick=()=>apply({d:1,mu:1,s:1,tau:1,k:1});
-
-  // Timeline (robust + visible)
-  let timeline=[]; let playId=null; let idx=0;
-
-  const DEFAULT_CSV = [
-    '2025-09-01,1.50,2.00,0.60,1.50,1.60',
-    '2025-09-02,0.80,0.60,2.00,0.70,0.90',
-    '2025-09-03,1.60,1.20,0.50,1.60,1.30',
-    '2025-09-04,0.70,2.00,1.80,0.60,1.00'
-  ].join('\n');
-
-  const status = msg => { q('now').textContent = msg; };
-
-  function parseCSV(text){
-    return text.trim().split(/\n+/).map(line => {
-      const cleaned = line.trim();
-      if (!cleaned) return null;
-      const parts = cleaned.split(/[\s,]+/); // More robust splitting
-      if (parts.length !== 6) return null;
-      const [date, d, mu, s, tau, k] = parts;
-      const row = {date, d: +d, mu: +mu, s: +s, tau: +tau, k: +k};
-      return [row.d, row.mu, row.s, row.tau, row.k].every(v => !Number.isNaN(v)) ? row : null;
-    }).filter(Boolean);
+  function csvCell(s){ s = String(s).replace(/"/g,'""'); return `"${s}"`; }
+  function download(filename, content, mime){
+    const blob = new Blob([content],{type: mime || 'text/plain'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 500);
   }
 
-  q('btnLoadCSV').onclick=()=>{
-    const txt = q('csv').value.trim();
-    const rows = parseCSV(txt);
-    if (!rows.length) { status('Could not read CSV. Using example.'); timeline = parseCSV(DEFAULT_CSV); }
-    else { timeline = rows; }
-    idx = 0;
-    status(`${timeline.length} entries loaded`);
-  };
+  $('clearAll').addEventListener('click', ()=>{
+    if (confirm('Remove all saved pages from this device?')){ localStorage.removeItem('twp.journal.v1'); renderList(); }
+  });
 
-  function flash(){ const svg=q('matrixSVG'); svg.style.outline='3px solid rgba(50,111,183,.6)'; setTimeout(()=>svg.style.outline='none',180); }
-
-  function step(){
-    if (!timeline.length) { status('No timeline loaded'); return; }
-    const row = timeline[idx % timeline.length];
-    apply(row);
-    status(row.date || `Entry ${idx+1}`);
-    flash();
-    idx++;
-  }
-
-  q('btnPlay').onclick=()=>{
-    if (playId) return;
-    if (!timeline.length){ timeline = parseCSV(DEFAULT_CSV); idx=0; status(`${timeline.length} entries loaded (example)`); }
-    step();
-    const sp = +q('playSpeed').value || 1;
-    playId = setInterval(step, 1500 / sp);
-  };
-
-  q('btnPause').onclick=()=>{ if (playId){ clearInterval(playId); playId=null; status('Paused'); } };
-});
+  renderList();
+})();
 </script>
 </body>
 </html>
