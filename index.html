@@ -2,416 +2,298 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Journey Journal — TWP</title>
-
-  <!-- Meta / Social -->
-  <meta name="description" content="My Journey Journal — a calm, purposeful journal for travellers. Science of Travel quietly powers the experience.">
-  <meta property="og:title" content="My Journey Journal — TWP">
-  <meta property="og:description" content="A simple journal for meaningful travel. The Matrix thinks quietly in the background.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="/assets/social-card.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-
+  <title>Journey Journal • Travel with Purpose</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind (CDN for MVP) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React 18 UMD -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Babel to allow JSX in-browser (fine for prototypes) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    /* Type & layout */
-    :root{
-      --bg:#f6f7f8; --ink:#111; --ink-2:#555; --line:#dcdcdc; --blue:#326FB7;
-      --d:1; --mu:1; --s:1; --tau:1; --k:1; /* EMM defaults */
-    }
-    html,body{margin:0;background:var(--bg);color:var(--ink);font:11pt/1.5 Calibri, Segoe UI, Roboto, system-ui, -apple-system, Arial, sans-serif;}
-    .wrap{max-width:1120px;margin:0 auto;padding:24px;}
-    h1,h2,h3{margin:0 0 .5rem 0}
-    h1{font-size:1.6rem} h2{font-size:1.2rem} h3{font-size:1rem}
-    p,li{color:var(--ink-2)}
-    .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
-    .grid{display:grid;gap:16px}
-    .grid-2{grid-template-columns:1fr 1fr}
-    .muted{color:#777}
-    .btn{display:inline-block;border:1px solid var(--line);background:#fff;color:var(--ink);padding:.5rem .75rem;border-radius:8px;text-decoration:none;cursor:pointer}
-    .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-    .btn[disabled]{opacity:.5;cursor:not-allowed}
-    nav.tabs{display:flex;gap:8px;margin:12px 0 20px 0;flex-wrap:wrap}
-    nav.tabs a{padding:.4rem .65rem;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--ink)}
-    nav.tabs a[aria-current="page"]{background:var(--blue);border-color:var(--blue);color:#fff}
-
-    /* Matrix SVG animation — “thinks quietly in the background” */
-    .matrix-container{display:flex;justify-content:center;margin:1rem 0}
-    .matrix-svg{width:100%;max-width:400px;height:auto}
-    #outer-field{transform-origin:200px 200px;animation:breathe calc(6s / var(--tau)) ease-in-out infinite alternate}
-    #petals{transform-origin:200px 200px;animation:rotate calc(20s / var(--s)) linear infinite}
-    #orbit-fast{transform-origin:200px 200px;animation:rotate calc(10s / var(--s)) linear infinite}
-    #orbit-slow{transform-origin:200px 200px;animation:rotate calc(15s / var(--s)) linear infinite reverse}
-    #traveller-fast,#traveller-slow{filter:drop-shadow(0 0 calc(4px * var(--mu)) #326FB7);}
-    #core{transform-origin:200px 200px;animation:pulse 2s ease-in-out infinite alternate}
-    @keyframes breathe{from{transform:scale(calc(0.95 * var(--d)));} to{transform:scale(calc(1.05 * var(--d)));}}
-    @keyframes rotate{to{transform:rotate(360deg);}}
-    @keyframes pulse{from{transform:scale(calc(0.9 * var(--k)));} to{transform:scale(calc(1.1 * var(--k)));}}
-
-    /* Respect OS reduced motion */
-    @media (prefers-reduced-motion: reduce){
-      #outer-field,#petals,#orbit-fast,#orbit-slow,#core{animation:none !important}
-    }
-
-    /* Small helpers */
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .chips{display:flex;gap:6px;flex-wrap:wrap}
-    .chip{background:#eef4fb;color:#224d7a;border-radius:999px;padding:.15rem .5rem;font-size:.85em}
-    textarea,input[type="text"]{width:100%;padding:.5rem;border:1px solid var(--line);border-radius:8px}
-    input[type="file"]{font-size:.9em}
-    .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
-    .thumbs img{width:100%;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
-    details>summary{cursor:pointer;font-weight:600;margin:.5rem 0}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-    .mapWrap{position:relative;overflow:hidden;border-radius:12px}
-    .mapWrap iframe{border:0;width:100%;height:520px}
-    .mapWrap::after{content:"";position:absolute;top:0;left:0;width:100%;height:40px;background:var(--bg);pointer-events:none}
-    .trip-preview{width:100%;border-collapse:collapse;margin-top:1rem}
-    .trip-preview th,.trip-preview td{border:1px solid #ddd;padding:8px}
-    .trip-preview th{background:#f4f4f4;text-align:left}
+    body { font-family: Calibri, "Segoe UI", system-ui, -apple-system, Arial, sans-serif; }
+    /* Matrix animations */
+    .outer-ring { transform-origin: 50% 50%; animation: breathe calc(4s / var(--tau)) ease-in-out infinite alternate; }
+    .petals-cw { transform-origin: 50% 50%; animation: rotate calc(15s / var(--s)) linear infinite; }
+    .orbit-fast { transform-origin: 50% 50%; animation: rotate calc(8s / var(--s)) linear infinite; }
+    .orbit-slow { transform-origin: 50% 50%; animation: rotate calc(12s / var(--s)) linear infinite reverse; }
+    .core-pulse { transform-origin: 50% 50%; animation: pulse calc(2.5s / var(--k)) ease-in-out infinite alternate; }
+    .traveller { filter: drop-shadow(0 0 calc(2px * var(--mu)) rgba(59,130,246, calc(0.4 * var(--mu)))); }
+    @keyframes breathe { from { transform: scale(calc(0.95 * var(--d))); } to { transform: scale(calc(1.05 * var(--d))); } }
+    @keyframes rotate { to { transform: rotate(360deg); } }
+    @keyframes pulse { from { transform: scale(calc(0.9 + (var(--k) - 1) * 0.1)); } to { transform: scale(calc(1.1 + (var(--k) - 1) * 0.2)); } }
   </style>
 </head>
-<body>
-  <div class="wrap grid" style="gap:24px">
-    <!-- Header -->
-    <header class="grid grid-2" style="align-items:center">
-      <div>
-        <h1>My Journey Journal</h1>
-        <p class="muted">A calm, purposeful journalling app for travellers. The Science of Travel (EMM + Matrix) hums in the background.</p>
-      </div>
-      <div class="row" style="justify-content:flex-end;">
-        <button id="copyLink" class="btn">Copy share link</button>
-        <a href="?d=1&mu=1&s=1&tau=1&k=1" class="btn">Balanced</a>
-        <a href="?d=1.3&mu=1.0&s=1.2&tau=0.9&k=1.1" class="btn">Explorer</a>
-        <a href="?d=1.0&mu=1.4&s=0.9&tau=1.1&k=1.1" class="btn">Connector</a>
-      </div>
-    </header>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+  <div id="root"></div>
 
-    <!-- Tabs -->
-    <nav class="tabs" role="tablist">
-      <a href="#today"   id="tab-today"   role="tab" aria-controls="today"   aria-current="page">Today</a>
-      <a href="#trips"   id="tab-trips"   role="tab" aria-controls="trips">Trips</a>
-      <a href="#gallery" id="tab-gallery" role="tab" aria-controls="gallery">Gallery</a>
-      <a href="#map"     id="tab-map"     role="tab" aria-controls="map">Map</a>
-    </nav>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-    <main>
-      <section class="grid" id="panels">
-        <!-- TODAY -->
-        <article id="today" class="card" role="tabpanel" aria-labelledby="tab-today">
-          <h2>Today</h2>
-          <p class="muted">Two silent minutes. Say what mattered. The Matrix will listen.</p>
+    function JourneyJournalApp() {
+      const [user] = useState({ id: "demo-user", email: "demo@cotravel.co.za", subscription: "premium" });
+      const [currentPage, setCurrentPage] = useState("matrix");
+      const [emm, setEmm] = useState({ d: 1.0, mu: 1.0, s: 1.0, tau: 1.0, k: 1.0 });
+      const [journalEntries, setJournalEntries] = useState([]);
+      const [currentConversation, setCurrentConversation] = useState(null);
+      const [isThinking, setIsThinking] = useState(false);
 
-          <div class="matrix-container"><div id="matrix-root"></div></div>
-
-          <details>
-            <summary>Inner Compass (advanced)</summary>
-            <div class="grid" style="grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px">
-              <label class="mono">d <input id="d"   type="range" min="0.7" max="1.6" step="0.01"></label>
-              <label class="mono">μ <input id="mu"  type="range" min="0.5" max="2.0" step="0.01"></label>
-              <label class="mono">s <input id="s"   type="range" min="0.5" max="2.0" step="0.01"></label>
-              <label class="mono">τ <input id="tau" type="range" min="0.6" max="1.6" step="0.01"></label>
-              <label class="mono">k <input id="k"   type="range" min="0.8" max="1.6" step="0.01"></label>
-            </div>
-          </details>
-
-          <div class="grid">
-            <input id="title" type="text" placeholder="Title (e.g. Morning reflection)">
-            <input id="tags"  type="text" placeholder="Tags (comma separated): calm, curious, connected">
-            <textarea id="note" rows="5" placeholder="What did the day ask of you?"></textarea>
-            <div class="row" style="justify-content:flex-end">
-              <button id="saveEntry" class="btn primary">Save entry</button>
-              <button id="exportJournal" class="btn">Export JSON</button>
-            </div>
-            <div id="entryHint" class="muted"></div>
-            <div id="recent" class="grid"></div>
-          </div>
-        </article>
-
-        <!-- TRIPS -->
-        <article id="trips" class="card" role="tabpanel" aria-labelledby="tab-trips" hidden>
-          <h2>Trips</h2>
-          <p class="muted">Import and preview your itineraries here.</p>
-          <div>
-            <button id="importPdfBtn" class="btn">Import PDF Itinerary</button>
-            <input type="file" id="pdfInput" accept="application/pdf" hidden />
-            <div id="pdfPreview" class="preview"></div>
-            <button id="saveTripBtn" class="btn">Save This Trip</button>
-            <h3>Saved Trips</h3>
-            <div id="savedTrips"></div>
-          </div>
-        </article>
-
-        <!-- GALLERY -->
-        <article id="gallery" class="card" role="tabpanel" aria-labelledby="tab-gallery" hidden>
-          <h2>Gallery</h2>
-          <p class="muted">Upload photos to sit alongside your entries. They remain in your browser only.</p>
-          <input id="photos" type="file" accept="image/*" multiple />
-          <div class="thumbs" id="thumbs" style="margin-top:10px"></div>
-        </article>
-
-        <!-- MAP -->
-        <article id="map" class="card" role="tabpanel" aria-labelledby="tab-map" hidden>
-          <h2>Map</h2>
-          <p class="muted">Your CoTravel map. Edit it in Google My Maps; updates appear here automatically.</p>
-          <div class="mapWrap">
-            <iframe
-              id="mymap"
-              src="https://www.google.com/maps/d/embed?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y"
-              loading="lazy"
-<!-- MAP -->
-<article id="map" class="card" role="tabpanel" aria-labelledby="tab-map" hidden>
-  <h2>Map</h2>
-  <p class="muted">Your CoTravel map. Edit it in Google My Maps; updates appear here automatically.</p>
-  <div class="mapWrap">
-    <iframe
-      id="mymap"
-      src="https://www.google.com/maps/d/embed?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y"
-      style="border:0;width:100%;height:520px;border-radius:12px"
-      loading="lazy"
-      referrerpolicy="no-referrer-when-downgrade"
-      aria-label="CoTravel Map">
-    </iframe>
-  </div>
-</article>
-
-              referrerpolicy="no-referrer-when-downgrade"
-              aria-label="CoTravel Map">
-            </iframe>
-          </div>
-          <div class="row" style="margin-top:.5rem">
-            <a class="btn" target="_blank" rel="noopener"
-               href="https://www.google.com/maps/d/u/0/edit?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y&usp=sharing">
-              Open in My Maps (edit)
-            </a>
-          </div>
-        </article>
-      </section>
-    </main>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script type="module">
-    import React from "https://esm.sh/react@18";
-    import { createRoot } from "https://esm.sh/react-dom@18/client";
-    import LivingMatrix from "./src/components/LivingMatrix.jsx";
-
-    // Configure PDF.js worker so parsing runs without cross-origin issues
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
-    // ---------- State ----------
-    const $ = (s, r=document)=>r.querySelector(s);
-    const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
-    const state = {
-      emm: { d:1, mu:1, s:1, tau:1, k:1 },
-      entries: JSON.parse(localStorage.getItem('mjj.entries')||'[]'),
-      photos:  JSON.parse(localStorage.getItem('mjj.photos')||'[]') // [{dataURL, date}]
-    };
-
-    const matrixRoot = createRoot(document.getElementById('matrix-root'));
-    function renderMatrix() {
-      matrixRoot.render(React.createElement(LivingMatrix, { ...state.emm }));
-    }
-
-    // ---------- EMM helpers ----------
-    function parseParams(){
-      const p = new URLSearchParams(location.search);
-      ['d','mu','s','tau','k'].forEach(k=>{
-        if(p.has(k)) state.emm[k] = parseFloat(p.get(k));
-      });
-    }
-    function clamp(n,min,max){return Math.max(min, Math.min(max, n));}
-    function tagsToEMM(tags, base=state.emm){
-      const t = tags.map(x=>x.trim().toLowerCase()).filter(Boolean);
-      const bump = (n,a,b)=> clamp(n + a - b, 0.5, 2.0);
-      const d   = clamp(base.d   + 0.10*(t.filter(x=>/excited|curious|brave|adventur/i.test(x)).length) - 0.10*(t.filter(x=>/calm|safe|steady/i.test(x)).length), 0.7, 1.6);
-      const mu  = clamp(base.mu  + 0.15*(t.filter(x=>/grateful|connected|purpose|meaning|inspir/i.test(x)).length), 0.5, 2.0);
-      const s   = clamp(base.s   + 0.10*(t.filter(x=>/energetic|active|busy|fast/i.test(x)).length) - 0.10*(t.filter(x=>/tired|slow|still|restful/i.test(x)).length), 0.5, 2.0);
-      const tau = clamp(base.tau + 0.10*(t.filter(x=>/calm|patient|peaceful|centred|balanced/i.test(x)).length) - 0.15*(t.filter(x=>/stressed|anxious|overwhelm|rushed/i.test(x)).length), 0.6, 1.6);
-      const k   = clamp(base.k   + 0.10*(t.filter(x=>/focused|determined|clear|intentional|directed/i.test(x)).length) - 0.10*(t.filter(x=>/confused|lost|uncertain|scattered/i.test(x)).length), 0.8, 1.6);
-      return {d,mu,s,tau,k};
-    }
-    function applyEMM(emm){
-      state.emm = emm;
-      const r = document.documentElement;
-      Object.entries(emm).forEach(([k,v])=> r.style.setProperty('--'+k, v));
-    }
-
-    // ---------- Matrix controls ----------
-    function wireInnerCompass(){
-      ['d','mu','s','tau','k'].forEach(k=>{
-        const input = $('#'+k);
-        input.value = state.emm[k];
-        input.addEventListener('input', ()=>{
-          const next = {...state.emm, [k]: parseFloat(input.value)};
-          applyEMM(next);
-          renderMatrix();
-          history.replaceState(null,'', location.pathname + '?' + new URLSearchParams(next).toString());
-        });
-      });
-    }
-
-    // ---------- Journal ----------
-    function saveEntry(){
-      const title = $('#title').value.trim();
-      const note  = $('#note').value.trim();
-      const tags  = $('#tags').value.split(',').map(s=>s.trim()).filter(Boolean);
-      if(!title && !note){ $('#entryHint').textContent = 'Write a line first.'; return; }
-
-      const emmFromTags = tags.length ? tagsToEMM(tags, state.emm) : state.emm;
-      applyEMM(emmFromTags);
-      renderMatrix();
-
-      const entry = {
-        id: Date.now(),
-        date: new Date().toISOString().slice(0,10),
-        title, note, tags,
-        emm: {...state.emm}
+      const conversationPrompts = {
+        purpose: {
+          title: "North Star: Purpose",
+          prompt: "What quietly matters most today? Name the smallest move that honours it."
+        },
+        excitement: {
+          title: "Fast Orbit: Excitement",
+          prompt: "Where did curiosity spark? How could you keep a gentle flame without burning out?"
+        },
+        connection: {
+          title: "Medium Orbit: Connection",
+          prompt: "Who or what felt like good company? What condition helped it happen?"
+        },
+        reflection: {
+          title: "Slow Orbit: Reflection",
+          prompt: "What needs grace or fallow time? Where can you pause without quitting?"
+        }
       };
-      state.entries.unshift(entry);
-      localStorage.setItem('mjj.entries', JSON.stringify(state.entries));
-      $('#entryHint').textContent = 'Saved locally. Private to this browser.';
-      $('#title').value=''; $('#note').value=''; $('#tags').value='';
-      renderRecent();
-    }
-    function renderRecent(){
-      const box = $('#recent');
-      if(state.entries.length===0){ box.innerHTML=''; return; }
-      box.innerHTML = state.entries.slice(0,5).map(e=>`
-        <div class="card">
-          <div class="row" style="justify-content:space-between">
-            <strong>${e.title||'Untitled'}</strong>
-            <span class="muted">${e.date}</span>
-          </div>
-          <p>${e.note ? e.note.replace(/</g,'&lt;') : ''}</p>
-          <div class="chips">${(e.tags||[]).map(t=>`<span class="chip">${t}</span>`).join('')}</div>
-          <div class="muted mono">EMM: d ${e.emm.d.toFixed(2)} · μ ${e.emm.mu.toFixed(2)} · s ${e.emm.s.toFixed(2)} · τ ${e.emm.tau.toFixed(2)} · k ${e.emm.k.toFixed(2)}</div>
+
+      function generateTravelSuggestion(values) {
+        const { d, mu, s, tau, k } = values;
+        if (mu > 1.4 && tau > 1.2) {
+          return { type: "Contemplative Retreat", reason: "High meaning and patience—prime for deep, interior travel." };
+        } else if (d > 1.3 && s > 1.2) {
+          return { type: "Adventure Expedition", reason: "Distance and speed are calling—time to cover ground." };
+        } else if (k > 1.3 && mu > 1.2) {
+          return { type: "Cultural Immersion", reason: "Strong intention with meaning—seek human stories, not spectacles." };
+        } else {
+          return { type: "Trust Your Inner Compass", reason: "Tune to the quiet signal; the map is already in you." };
+        }
+      }
+
+      async function generateResponse(userMessage, type) {
+        setIsThinking(true);
+        await new Promise(r => setTimeout(r, 700));
+        const primaryKey = Object.entries(emm).sort((a,b) => b[1]-a[1])[0][0];
+        const primaryName = { d:"adventure-seeking", mu:"meaning-focused", s:"energetic", tau:"calm-centred", k:"purpose-driven" }[primaryKey];
+        let text = "";
+        if (type === "purpose") {
+          text = `I’m sensing a ${primaryName} pattern. ${userMessage} isn’t trivial; it’s a compass bearing.
+What single act today would honour that? Smaller often means truer.`;
+        } else if (type === "connection") {
+          text = `Connection is presence, not performance. If your meaning is rising, widen your attention and let it meet you where you already are.`;
+        } else if (type === "reflection") {
+          text = `Fallow time isn’t empty; it’s the soil doing quiet geometry. If patience is low, pause anyway. The pause is part of the move.`;
+        } else {
+          text = `Energy wants a corridor, not a cul-de-sac. Name the experience you need, then let destination follow intention.`;
+        }
+        setIsThinking(false);
+        return text;
+      }
+
+      async function startConversation(type) {
+        const msg = window.prompt(conversationPrompts[type].prompt);
+        if (!msg) return;
+        const convo = {
+          id: Date.now(),
+          messages: [
+            { role: "assistant", content: conversationPrompts[type].prompt },
+            { role: "user", content: msg }
+          ]
+        };
+        const reply = await generateResponse(msg, type);
+        convo.messages.push({ role: "assistant", content: reply });
+        setCurrentConversation(convo);
+      }
+
+      useEffect(() => {
+        const root = document.documentElement;
+        Object.entries(emm).forEach(([k,v]) => root.style.setProperty(`--${k}`, String(v)));
+        setJournalEntries([
+          { id:1, date:"2024-06-06", title:"Athens Arrival", content:"Shadow of the Acropolis. Gratitude. Breath slow, eyes wide.", tags:["grateful","curious","inspired"], location:"Athens", emm:{ d:1.2, mu:1.4, s:0.9, tau:1.1, k:1.3 } },
+          { id:2, date:"2024-06-07", title:"Ancient Wisdom", content:"Agora at sunrise. Silence teaches more than plaques.", tags:["peaceful","contemplative","connected"], location:"Agora", emm:{ d:0.9, mu:1.7, s:0.7, tau:1.5, k:1.4 } }
+        ]);
+      }, [emm]);
+
+      const fmt = x => Number(x).toFixed(2);
+      const suggestion = generateTravelSuggestion(emm);
+
+      return (
+        <div>
+          {/* Header */}
+          <header className="bg-white shadow-sm border-b">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Journey Journal</h1>
+                <p className="text-gray-600">Travel with Purpose • Your inner landscape as living art</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Premium</span>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-900">{user.email}</div>
+                  <div className="text-xs text-gray-500">CoTravel Member</div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Nav */}
+          <nav className="bg-white border-b">
+            <div className="max-w-7xl mx-auto px-6">
+              <div className="flex space-x-8">
+                {[
+                  { id: "matrix", label: "Living Matrix" },
+                  { id: "conversation", label: "Paula Chat" },
+                  { id: "journal", label: "Journal Entries" }
+                ].map(tab => (
+                  <button key={tab.id}
+                    onClick={() => setCurrentPage(tab.id)}
+                    className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                      currentPage === tab.id ? "border-blue-500 text-blue-600" :
+                      "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </nav>
+
+          {/* Main */}
+          <main className="max-w-7xl mx-auto px-6 py-8">
+            {currentPage === "matrix" && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Your Living Matrix</h2>
+                <div className="mb-6">
+                  <svg viewBox="0 0 400 400" className="w-full h-auto"
+                       style={{ ["--d"]:emm.d, ["--mu"]:emm.mu, ["--s"]:emm.s, ["--tau"]:emm.tau, ["--k"]:emm.k }}>
+                    <rect width="400" height="400" fill="#f8fafc" />
+                    <g className="outer-ring"><circle cx="200" cy="200" r="180" fill="none" stroke="#3b82f6" strokeWidth="2" opacity="0.8"/></g>
+                    <g className="petals-cw" opacity="0.6">
+                      {[0,60,120].map(a => (
+                        <g key={a} transform={`rotate(${a} 200 200)`}>
+                          <circle cx="200" cy="200" r="120" fill="none" stroke="#6b7280" strokeWidth="1.5"/>
+                        </g>
+                      ))}
+                    </g>
+                    <g className="orbit-fast">
+                      <ellipse cx="200" cy="200" rx="160" ry="100" fill="none" stroke="#111" strokeWidth="2.5" opacity="0.9"/>
+                      <circle cx="360" cy="200" r="6" fill="#111" className="traveller"/>
+                    </g>
+                    <g className="orbit-slow">
+                      <ellipse cx="200" cy="200" rx="80" ry="140" fill="none" stroke="#666" strokeWidth="2"/>
+                      <circle cx="280" cy="200" r="5" fill="#666" className="traveller"/>
+                    </g>
+                    <g className="core-pulse">
+                      <circle cx="200" cy="200" r="30" fill="#1f2937" opacity="0.85"/>
+                      <circle cx="200" cy="200" r="45" fill="none" stroke="#3b82f6" strokeWidth="2" opacity="0.9"/>
+                    </g>
+                  </svg>
+                </div>
+
+                <div className="grid grid-cols-5 gap-4 mb-6">
+                  {Object.entries(emm).map(([key, value]) => (
+                    <div key={key} className="text-center">
+                      <div className="text-2xl font-mono font-bold text-blue-600 mb-2">{fmt(value)}</div>
+                      <div className="text-xs text-gray-500 mb-2">
+                        {key==="mu"?"μ (meaning)":key==="tau"?"τ (patience)":key==="d"?"d (distance)":key==="s"?"s (speed)":"k (intention)"}
+                      </div>
+                      <input type="range"
+                        min={key==="d"?0.7:key==="mu"||key==="s"?0.5:key==="tau"?0.6:0.8}
+                        max={key==="d"||key==="tau"||key==="k"?1.6:2.0}
+                        step="0.01" value={value}
+                        onChange={e => setEmm({ ...emm, [key]: parseFloat(e.target.value) })}
+                        className="w-full" />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2">Current Suggestion</h3>
+                  <p className="text-blue-800">{suggestion.reason}</p>
+                </div>
+              </div>
+            )}
+
+            {currentPage === "conversation" && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Conversation with Paula</h2>
+                {!currentConversation ? (
+                  <div className="space-y-4">
+                    <p className="text-gray-600 mb-6">Choose a conversation starter inspired by your Travel with Purpose journey:</p>
+                    {Object.entries(conversationPrompts).map(([key, p]) => (
+                      <button key={key}
+                        onClick={() => startConversation(key)}
+                        className="w-full text-left p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                        <h3 className="font-semibold text-gray-900 mb-2">{p.title}</h3>
+                        <p className="text-gray-600 text-sm">{p.prompt}</p>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <button onClick={() => setCurrentConversation(null)} className="text-blue-600 hover:text-blue-800 mb-4">← Start New Conversation</button>
+                    {currentConversation.messages.map((m,i) => (
+                      <div key={i} className={`p-4 rounded-lg ${m.role==="assistant"?"bg-blue-50 border-l-4 border-blue-400":"bg-gray-50 border-l-4 border-gray-400"}`}>
+                        <div className="text-sm text-gray-500 mb-2">{m.role==="assistant"?"Paula":"You"}</div>
+                        <div className="text-gray-800 whitespace-pre-wrap">{m.content}</div>
+                      </div>
+                    ))}
+                    {isThinking && (
+                      <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                        <div className="text-sm text-blue-600 mb-2">Paula is reflecting…</div>
+                        <div className="text-blue-800">Thinking about your journey…</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {currentPage === "journal" && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Journey Journal</h2>
+                <div className="space-y-6">
+                  {journalEntries.map(entry => (
+                    <div key={entry.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">{entry.title}</h3>
+                        <span className="text-sm text-gray-500">{entry.date}</span>
+                      </div>
+                      <p className="text-gray-700 mb-3">{entry.content}</p>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {entry.tags.map((t,i) => <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">{t}</span>)}
+                      </div>
+                      <div className="text-sm text-gray-500">Location: {entry.location}</div>
+                      <div className="grid grid-cols-5 gap-2 mt-3 text-center">
+                        {Object.entries(entry.emm).map(([k,v]) => (
+                          <div key={k} className="text-xs">
+                            <div className="font-mono text-blue-600">{fmt(v)}</div>
+                            <div className="text-gray-500">{k}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* Footer */}
+          <footer className="bg-white border-t mt-16">
+            <div className="max-w-7xl mx-auto px-6 py-8 text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Travel with Purpose</h3>
+              <p className="text-gray-600 mb-4">Transform your inner journey into living art and meaningful travel experiences</p>
+              <div className="mt-4 text-xs text-gray-500">© 2025 CoTravel • Journey Journal • Travel with Purpose</div>
+            </div>
+          </footer>
         </div>
-      `).join('');
-    }
-    function exportJournal(){
-      const blob = new Blob([JSON.stringify({entries:state.entries, trips:state.trips, exported:new Date().toISOString()}, null, 2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `my-journey-journal-${new Date().toISOString().slice(0,10)}.json`;
-      a.click(); URL.revokeObjectURL(a.href);
+      );
     }
 
-    // ---------- Trips PDF Import ----------
-    const importPdfBtn = document.getElementById("importPdfBtn");
-    const pdfInput = document.getElementById("pdfInput");
-    const pdfPreview = document.getElementById("pdfPreview");
-    const saveTripBtn = document.getElementById("saveTripBtn");
-    const savedTripsDiv = document.getElementById("savedTrips");
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<JourneyJournalApp />);
+  </script>
+</body>
+</html>
 
-    let currentTripRows = [];
-
-    importPdfBtn.addEventListener("click", () => pdfInput.click());
-    pdfInput.addEventListener("change", handlePdf);
-    saveTripBtn.addEventListener("click", saveTrip);
-
-    async function handlePdf(evt){
-      const file = evt.target.files[0];
-      if(!file) return;
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-      let text = "";
-      for(let i=1;i<=pdf.numPages;i++){
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text += content.items.map(it=>it.str).join(" ") + "\n";
-      }
-      renderPreview(text);
-      evt.target.value = ""; // allow re-selecting same file
-    }
-
-    function renderPreview(text){
-      const lines = text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
-      currentTripRows = lines.map((line,i)=>({id:i, raw:line}));
-      const table = `
-        <table>
-          <thead><tr><th>#</th><th>Detail</th></tr></thead>
-          <tbody>
-            ${currentTripRows.map(r=>`<tr><td>${r.id+1}</td><td>${r.raw}</td></tr>`).join("")}
-          </tbody>
-        </table>
-      `;
-      pdfPreview.innerHTML = table;
-    }
-
-    function saveTrip(){
-      if(!currentTripRows.length) return alert("No trip to save!");
-      const saved = JSON.parse(localStorage.getItem("myTrips")||"[]");
-      const trip = { id: Date.now(), rows: currentTripRows };
-      saved.push(trip);
-      localStorage.setItem("myTrips", JSON.stringify(saved));
-      renderSavedTrips();
-    }
-
-    function renderSavedTrips(){
-      const saved = JSON.parse(localStorage.getItem("myTrips")||"[]");
-      if(!saved.length){
-        savedTripsDiv.innerHTML = "<em>No saved trips</em>";
-        return;
-      }
-      savedTripsDiv.innerHTML = saved.map(t=>`
-        <details>
-          <summary>Trip ${new Date(t.id).toLocaleString()}</summary>
-          <ul>${t.rows.map(r=>`<li>${r.raw}</li>`).join("")}</ul>
-        </details>
-      `).join("");
-    }
-
-    // Restore saved trips on load handled during init
-
-    // ---------- Gallery ----------
-    function handlePhotos(ev){
-      const files = Array.from(ev.target.files||[]);
-      if(files.length===0) return;
-      const readAll = files.map(f=> new Promise(res=>{
-        const fr = new FileReader();
-        fr.onload = ()=> res({dataURL: fr.result, date: new Date().toISOString().slice(0,10), name: f.name});
-        fr.readAsDataURL(f);
-      }));
-      Promise.all(readAll).then(list=>{
-        state.photos.unshift(...list);
-        localStorage.setItem('mjj.photos', JSON.stringify(state.photos));
-        renderThumbs();
-      });
-      ev.target.value = '';
-    }
-    function renderThumbs(){
-      const g = $('#thumbs');
-      if(state.photos.length===0){ g.innerHTML=''; return; }
-      g.innerHTML = state.photos.map(p=>`<figure><img src="${p.dataURL}" alt="Photo"><figcaption class="muted" style="font-size:.8em">${p.name}</figcaption></figure>`).join('');
-    }
-
-    // ---------- Tabs ----------
-function wireTabs(){
-  const tabs = [
-    ['today', '#tab-today'],
-    ['trips', '#tab-trips'],
-    ['gallery', '#tab-gallery'],
-    ['map', '#tab-map']   // include #map for My Maps embed
-  ];
-
-  tabs.forEach(([id,btn])=>{
-    $(btn).addEventListener('click', e=>{
-      e.preventDefault();
-      tabs.forEach(([tid,tbtn])=>{
-        $('#'+tid).hidden = (tid!==id);
-        $(tbtn).setAttribute('aria-current', tid===id ? 'page' : 'false');
-      });
-      history.replaceState(null,'',location.pathname + location.search + '#'+id);
-    });
-  });
-
-  // open deep link
-  const hash = location.hash.replace('#','');
-  if(hash && tabs.some(([id]) => id===hash)){
-    $('#'+hash).hidden = false;
-    $('[href="#'+hash+'"]').setAttribute('aria-current','page');
-  } else {
-    $('#today').hidden = false;
-    $('#tab-today').setAttribute('aria-current','page');
-  }
-}
