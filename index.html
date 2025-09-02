@@ -66,6 +66,9 @@
     .thumbs img{width:100%;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
     details>summary{cursor:pointer;font-weight:600;margin:.5rem 0}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .trip-preview{width:100%;border-collapse:collapse;margin-top:1rem}
+    .trip-preview th,.trip-preview td{border:1px solid #ddd;padding:8px}
+    .trip-preview th{background:#f4f4f4;text-align:left}
   </style>
 </head>
 <body>
@@ -89,6 +92,7 @@
       <a href="#today"   id="tab-today"   role="tab" aria-controls="today"   aria-current="page">Today</a>
       <a href="#trips"   id="tab-trips"   role="tab" aria-controls="trips">Trips</a>
       <a href="#gallery" id="tab-gallery" role="tab" aria-controls="gallery">Gallery</a>
+      <a href="#map"     id="tab-map"     role="tab" aria-controls="map">Map</a>
     </nav>
 
     <main class="grid grid-2">
@@ -176,6 +180,11 @@
             <button id="loadTrips" class="btn primary">Load itinerary</button>
           </div>
           <div id="tripList" class="grid" style="margin-top:10px"></div>
+          <div class="import-pdf">
+            <button id="import-pdf-btn" class="btn">Import PDF Itinerary</button>
+            <input type="file" id="pdf-upload" accept="application/pdf" hidden />
+            <div id="pdf-preview" class="pdf-preview"></div>
+          </div>
         </article>
 
         <!-- GALLERY -->
@@ -185,10 +194,33 @@
           <input id="photos" type="file" accept="image/*" multiple />
           <div class="thumbs" id="thumbs" style="margin-top:10px"></div>
         </article>
+
+        <!-- MAP -->
+        <article id="map" class="card" role="tabpanel" aria-labelledby="tab-map" hidden>
+          <h2>Map</h2>
+          <p class="muted">Your CoTravel map. Edit it in Google My Maps; updates appear here automatically.</p>
+          <div class="mapWrap">
+            <iframe
+              id="mymap"
+              src="https://www.google.com/maps/d/embed?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y"
+              loading="lazy"
+              style="border:0;width:100%;height:520px;border-radius:12px"
+              referrerpolicy="no-referrer-when-downgrade"
+              aria-label="CoTravel Map">
+            </iframe>
+          </div>
+          <div class="row" style="margin-top:.5rem">
+            <a class="btn" target="_blank" rel="noopener"
+               href="https://www.google.com/maps/d/u/0/edit?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y&usp=sharing">
+              Open in My Maps (edit)
+            </a>
+          </div>
+        </article>
       </section>
     </main>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
   <script>
     // ---------- State ----------
     const $ = (s, r=document)=>r.querySelector(s);
@@ -303,6 +335,82 @@
       `).join('');
     }
 
+    // ---------- Trips PDF Import ----------
+    const importBtn = document.getElementById("import-pdf-btn");
+    const fileInput = document.getElementById("pdf-upload");
+    const previewDiv = document.getElementById("pdf-preview");
+
+    importBtn?.addEventListener("click", () => fileInput.click());
+
+    fileInput?.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function() {
+        const typedArray = new Uint8Array(this.result);
+
+        const pdf = await pdfjsLib.getDocument(typedArray).promise;
+        let textContent = "";
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const strings = content.items.map(item => item.str);
+          textContent += strings.join(" ") + "\n";
+        }
+
+        renderPreview(textContent);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function renderPreview(text) {
+      const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+
+      let rows = [];
+      let currentDate = "";
+
+      lines.forEach(line => {
+        if (/^\d{1,2}\s+\w+\s+\d{4}/.test(line)) {
+          currentDate = line;
+        } else {
+          rows.push({ date: currentDate, detail: line });
+        }
+      });
+
+      previewDiv.innerHTML = `
+        <table class="trip-preview">
+          <thead><tr><th>Date</th><th>Detail</th></tr></thead>
+          <tbody>
+            ${rows.map(r => `<tr><td>${r.date}</td><td>${r.detail}</td></tr>`).join("")}
+          </tbody>
+        </table>
+        <button id="save-trips-btn" class="btn">Save to Trips</button>
+      `;
+
+      document.getElementById("save-trips-btn").onclick = () => {
+        localStorage.setItem("myTrips", JSON.stringify(rows));
+        alert("Trips saved!");
+      };
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const saved = localStorage.getItem("myTrips");
+      if (saved) {
+        const rows = JSON.parse(saved);
+        previewDiv.innerHTML = `
+          <h4>Saved Trips</h4>
+          <table class="trip-preview">
+            <thead><tr><th>Date</th><th>Detail</th></tr></thead>
+            <tbody>
+              ${rows.map(r => `<tr><td>${r.date}</td><td>${r.detail}</td></tr>`).join("")}
+            </tbody>
+          </table>
+        `;
+      }
+    });
+
     // ---------- Gallery ----------
     function handlePhotos(ev){
       const files = Array.from(ev.target.files||[]);
@@ -327,20 +435,22 @@
 
     // ---------- Tabs ----------
     function wireTabs(){
-      const tabs = [['today','#tab-today'],['trips','#tab-trips'],['gallery','#tab-gallery']];
-      tabs.forEach(([id,btn])=>{
-        $(btn).addEventListener('click', e=>{
-          e.preventDefault();
-          tabs.forEach(([tid,tbtn])=>{
-            $('#'+tid).hidden = (tid!==id);
-            $(tbtn).setAttribute('aria-current', tid===id ? 'page' : 'false');
-          });
-          history.replaceState(null,'', location.pathname + location.search + '#'+id);
+      const KNOWN = ['#today', '#trips', '#gallery', '#map'];
+
+      function showPanel(hash){
+        const target = KNOWN.includes(hash) ? hash : '#today';
+        document.querySelectorAll('article[role="tabpanel"]').forEach(p => p.hidden = true);
+        const panel = document.querySelector(target);
+        if (panel) panel.hidden = false;
+        document.querySelectorAll('nav.tabs a[role="tab"]').forEach(a => {
+          const active = a.getAttribute('href') === target;
+          a.classList.toggle('active', active);
+          a.setAttribute('aria-current', active ? 'page' : 'false');
         });
-      });
-      // open deep link
-      const hash = location.hash.replace('#','');
-      if(['today','trips','gallery'].includes(hash)) $( '#tab-'+hash ).click();
+      }
+
+      window.addEventListener('hashchange', () => showPanel(location.hash));
+      showPanel(location.hash || '#today');
     }
 
     // ---------- Share link ----------
