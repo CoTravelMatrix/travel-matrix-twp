@@ -195,8 +195,8 @@
     };
 
     const matrixRoot = createRoot(document.getElementById('matrix-root'));
-    function renderMatrix(){
-      matrixRoot.render(<LivingMatrix {...state.emm} />);
+    function renderMatrix() {
+      matrixRoot.render(React.createElement(LivingMatrix, { ...state.emm }));
     }
 
     // ---------- EMM helpers ----------
