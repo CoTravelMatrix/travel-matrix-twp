@@ -195,6 +195,48 @@ window.addEventListener('DOMContentLoaded', function () {
     ['d','mu','s','tau','k'].forEach(k=>{if(typeof o[k]==='number') q(k).value=o[k]});
     ['d','mu','s','tau','k'].forEach(id=>q(id).dispatchEvent(new Event('input')));
   };
+<!-- TWP: Journal MVP -->
+<div id="twpJournal" style="margin-top:14px;border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <strong>North Star</strong>
+    <input id="twpNorthStar" type="text" placeholder="I am moving with intention toward…"
+           style="flex:1;min-width:260px;padding:6px 8px;border:1px solid #dcdfe4;border-radius:8px">
+    <span style="font-size:12px;color:#47515a">EMM:</span>
+    <span id="twpEmm" style="font-variant-numeric:tabular-nums">0.00</span>
+    <button id="twpPromptBtn" style="padding:6px 10px;border:1px solid #dcdfe4;border-radius:8px;background:#fff;cursor:pointer">
+      Random Heart
+    </button>
+  </div>
+
+  <details style="margin-top:10px">
+    <summary style="cursor:pointer;font-weight:600">2-Minute Pager</summary>
+    <div style="margin-top:8px;display:grid;gap:6px">
+      <label><input type="checkbox" id="twpQ1"> Motion — I moved the story on (how?)</label>
+      <label><input type="checkbox" id="twpQ2"> Grace — I kept my dignity and my tongue</label>
+      <label><input type="checkbox" id="twpQ3"> Timing — I was where I needed to be</label>
+      <label><input type="checkbox" id="twpQ4"> Intention — I allowed what I asked for</label>
+      <label><input type="checkbox" id="twpQ5"> Proof — I demonstrated my theory in practice</label>
+      <textarea id="twpNotes" rows="3" placeholder="One line of evidence…"
+                style="padding:8px;border:1px solid #dcdfe4;border-radius:8px"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="twpSave"  style="padding:6px 10px;border:1px solid #dcdfe4;border-radius:8px;background:#fff;cursor:pointer">Save</button>
+        <button id="twpExport" style="padding:6px 10px;border:1px solid #dcdfe4;border-radius:8px;background:#fff;cursor:pointer">Export</button>
+      </div>
+      <div id="twpStatus" style="font-size:12px;color:#47515a"></div>
+    </div>
+  </details>
+</div>
+
+<!-- Prompt modal -->
+<div id="twpModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999">
+  <div style="max-width:560px;margin:10vh auto;background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <strong id="twpPromptTitle">Random Heart</strong>
+      <button id="twpClose" style="border:0;background:transparent;font-size:20px;cursor:pointer">×</button>
+    </div>
+    <p id="twpPromptText" style="margin:10px 0 0 0"></p>
+  </div>
+</div>
 
   document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const name=b.dataset.preset;apply(loadAll()[name]||defaults[name])});
   q('btnSavePreset').onclick=()=>{const name=(q('presetName').value||'').trim();if(!name)return alert('Name your preset.');const all=loadAll();all[name]=state();saveAll(all);alert('Saved preset: '+name)};
