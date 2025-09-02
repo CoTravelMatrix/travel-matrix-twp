@@ -159,6 +159,22 @@
               id="mymap"
               src="https://www.google.com/maps/d/embed?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y"
               loading="lazy"
+<!-- MAP -->
+<article id="map" class="card" role="tabpanel" aria-labelledby="tab-map" hidden>
+  <h2>Map</h2>
+  <p class="muted">Your CoTravel map. Edit it in Google My Maps; updates appear here automatically.</p>
+  <div class="mapWrap">
+    <iframe
+      id="mymap"
+      src="https://www.google.com/maps/d/embed?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y"
+      style="border:0;width:100%;height:520px;border-radius:12px"
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      aria-label="CoTravel Map">
+    </iframe>
+  </div>
+</article>
+
               referrerpolicy="no-referrer-when-downgrade"
               aria-label="CoTravel Map">
             </iframe>
@@ -370,42 +386,32 @@
     }
 
     // ---------- Tabs ----------
-    function wireTabs(){
-      const KNOWN = ['#today', '#trips', '#gallery', '#map']; // include #map for My Maps embed
+function wireTabs(){
+  const tabs = [
+    ['today', '#tab-today'],
+    ['trips', '#tab-trips'],
+    ['gallery', '#tab-gallery'],
+    ['map', '#tab-map']   // include #map for My Maps embed
+  ];
 
-      function showPanel(hash){
-        const target = KNOWN.includes(hash) ? hash : '#today';
-        document.querySelectorAll('article[role="tabpanel"]').forEach(p => p.hidden = true);
-        const panel = document.querySelector(target);
-        if (panel) panel.hidden = false;
-        document.querySelectorAll('nav.tabs a[role="tab"]').forEach(a => {
-          const active = a.getAttribute('href') === target;
-          a.classList.toggle('active', active);
-          a.setAttribute('aria-current', active ? 'page' : 'false');
-        });
-      }
+  tabs.forEach(([id,btn])=>{
+    $(btn).addEventListener('click', e=>{
+      e.preventDefault();
+      tabs.forEach(([tid,tbtn])=>{
+        $('#'+tid).hidden = (tid!==id);
+        $(tbtn).setAttribute('aria-current', tid===id ? 'page' : 'false');
+      });
+      history.replaceState(null,'',location.pathname + location.search + '#'+id);
+    });
+  });
 
-      window.addEventListener('hashchange', () => showPanel(location.hash));
-      showPanel(location.hash || '#today');
-    }
-
-    // ---------- Share link ----------
-    function copyShare(){
-      const url = location.origin + location.pathname + '?' + new URLSearchParams(state.emm).toString();
-      navigator.clipboard.writeText(url).then(()=>{$('#copyLink').textContent='Link copied'; setTimeout(()=>$('#copyLink').textContent='Copy share link',1200);});
-    }
-
-    // ---------- Init ----------
-    parseParams();
-    applyEMM(state.emm);
-    renderMatrix();
-    wireInnerCompass(); wireTabs();
-    renderRecent(); renderSavedTrips(); renderThumbs();
-
-    $('#saveEntry').addEventListener('click', saveEntry);
-    $('#exportJournal').addEventListener('click', exportJournal);
-    $('#photos').addEventListener('change', handlePhotos);
-    $('#copyLink').addEventListener('click', copyShare);
-  </script>
-</body>
-</html>
+  // open deep link
+  const hash = location.hash.replace('#','');
+  if(hash && tabs.some(([id]) => id===hash)){
+    $('#'+hash).hidden = false;
+    $('[href="#'+hash+'"]').setAttribute('aria-current','page');
+  } else {
+    $('#today').hidden = false;
+    $('#tab-today').setAttribute('aria-current','page');
+  }
+}
