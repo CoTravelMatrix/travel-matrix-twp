@@ -36,24 +36,21 @@
     nav.tabs a[aria-current="page"]{background:var(--blue);border-color:var(--blue);color:#fff}
 
     /* Matrix SVG animation — “thinks quietly in the background” */
-    .matrix{width:100%;height:auto;display:block}
-    .outer{transform-origin:50% 50%;animation:breathe calc(6s / var(--tau)) ease-in-out infinite alternate}
-    .petals-cw{transform-origin:50% 50%;animation:spinCW calc(40s / var(--s)) linear infinite}
-    .petals-ccw{transform-origin:50% 50%;animation:spinCCW calc(36s / var(--s)) linear infinite}
-    .orbit-fast{transform-origin:50% 50%;animation:spinCW calc(18s / var(--s)) linear infinite}
-    .orbit-medium{transform-origin:50% 50%;animation:spinCW calc(24s / var(--s)) linear infinite}
-    .orbit-slow{transform-origin:50% 50%;animation:spinCW calc(30s / var(--s)) linear infinite}
-    .core{transform-origin:50% 50%;animation:pulse calc(2.8s / var(--k)) ease-in-out infinite alternate}
-    .traveller{filter:drop-shadow(0 0 calc(1.5px * var(--mu)) rgba(50,111,183,calc(.25 * var(--mu))))}
-
-    @keyframes breathe{from{transform:scale(calc(.98 * var(--d)))} to{transform:scale(calc(1.02 * var(--d)))}}
-    @keyframes spinCW{to{transform:rotate(360deg)}}
-    @keyframes spinCCW{to{transform:rotate(-360deg)}}
-    @keyframes pulse{from{transform:scale(calc(1 + (var(--k) - 1) * .25))} to{transform:scale(calc(1.08 + (var(--k)-1) * .35))}}
+    .matrix-container{display:flex;justify-content:center;margin:1rem 0}
+    .matrix-svg{width:100%;max-width:400px;height:auto}
+    #outer-field{transform-origin:200px 200px;animation:breathe calc(6s / var(--tau)) ease-in-out infinite alternate}
+    #petals{transform-origin:200px 200px;animation:rotate calc(20s / var(--s)) linear infinite}
+    #orbit-fast{transform-origin:200px 200px;animation:rotate calc(10s / var(--s)) linear infinite}
+    #orbit-slow{transform-origin:200px 200px;animation:rotate calc(15s / var(--s)) linear infinite reverse}
+    #traveller-fast,#traveller-slow{filter:drop-shadow(0 0 calc(4px * var(--mu)) #326FB7);}
+    #core{transform-origin:200px 200px;animation:pulse 2s ease-in-out infinite alternate}
+    @keyframes breathe{from{transform:scale(calc(0.95 * var(--d)));} to{transform:scale(calc(1.05 * var(--d)));}}
+    @keyframes rotate{to{transform:rotate(360deg);}}
+    @keyframes pulse{from{transform:scale(calc(0.9 * var(--k)));} to{transform:scale(calc(1.1 * var(--k)));}}
 
     /* Respect OS reduced motion */
     @media (prefers-reduced-motion: reduce){
-      .outer,.petals-cw,.petals-ccw,.orbit-fast,.orbit-medium,.orbit-slow,.core{animation:none !important}
+      #outer-field,#petals,#orbit-fast,#orbit-slow,#core{animation:none !important}
     }
 
     /* Small helpers */
@@ -66,6 +63,12 @@
     .thumbs img{width:100%;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
     details>summary{cursor:pointer;font-weight:600;margin:.5rem 0}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .mapWrap{position:relative;overflow:hidden;border-radius:12px}
+    .mapWrap iframe{border:0;width:100%;height:520px}
+    .mapWrap::after{content:"";position:absolute;top:0;left:0;width:100%;height:40px;background:var(--bg);pointer-events:none}
+    .trip-preview{width:100%;border-collapse:collapse;margin-top:1rem}
+    .trip-preview th,.trip-preview td{border:1px solid #ddd;padding:8px}
+    .trip-preview th{background:#f4f4f4;text-align:left}
   </style>
 </head>
 <body>
@@ -89,71 +92,29 @@
       <a href="#today"   id="tab-today"   role="tab" aria-controls="today"   aria-current="page">Today</a>
       <a href="#trips"   id="tab-trips"   role="tab" aria-controls="trips">Trips</a>
       <a href="#gallery" id="tab-gallery" role="tab" aria-controls="gallery">Gallery</a>
+      <a href="#map"     id="tab-map"     role="tab" aria-controls="map">Map</a>
     </nav>
 
-    <main class="grid grid-2">
-      <!-- Left: Matrix -->
-      <section class="card">
-        <h2>Living Matrix</h2>
-        <p class="muted">Your inner compass rendered as living geometry. Adjusted quietly by your reflections.</p>
-        <svg id="matrix" class="matrix" viewBox="0 0 600 600" aria-label="Travel Matrix" style="--d:1;--mu:1;--s:1;--tau:1;--k:1">
-          <!-- outer field -->
-          <g class="outer">
-            <circle cx="300" cy="300" r="280" fill="none" stroke="#326FB7" stroke-width="1.2"/>
-          </g>
-          <!-- petals -->
-          <g class="petals-cw" opacity=".85">
-            <!-- six rings -->
-            <g transform="rotate(0 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(30 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(60 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(90 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(120 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(150 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-          </g>
-          <g class="petals-ccw" opacity=".65">
-            <g transform="rotate(15 300 300)"><circle cx="300" cy="300" r="170" fill="none" stroke="#326FB7" stroke-width="1.2"/></g>
-            <g transform="rotate(45 300 300)"><circle cx="300" cy="300" r="170" fill="none" stroke="#326FB7" stroke-width="1.2"/></g>
-            <g transform="rotate(75 300 300)"><circle cx="300" cy="300" r="170" fill="none" stroke="#326FB7" stroke-width="1.2"/></g>
-          </g>
-          <!-- orbits -->
-          <g class="orbit-fast">
-            <ellipse cx="300" cy="300" rx="250" ry="150" fill="none" stroke="#111" stroke-width="3" opacity=".9"/>
-            <circle cx="550" cy="300" r="10" fill="#111" class="traveller"/>
-          </g>
-          <g class="orbit-medium">
-            <ellipse cx="300" cy="300" rx="230" ry="210" fill="none" stroke="#aeb4b9" stroke-width="2.2"/>
-            <circle cx="70"  cy="300" r="10" fill="#111" class="traveller"/>
-          </g>
-          <g class="orbit-slow">
-            <ellipse cx="300" cy="300" rx="120" ry="260" fill="none" stroke="#111" stroke-width="2.2"/>
-            <circle cx="420" cy="300" r="10" fill="#111" class="traveller"/>
-          </g>
-          <!-- core -->
-          <g class="core">
-            <circle cx="300" cy="300" r="50" fill="#222" opacity=".88"/>
-            <circle cx="300" cy="300" r="70" fill="none" stroke="#326FB7" stroke-width="2.2" opacity=".95"/>
-          </g>
-        </svg>
-
-        <details>
-          <summary>Inner Compass (advanced)</summary>
-          <div class="grid" style="grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px">
-            <label class="mono">d <input id="d"   type="range" min="0.7" max="1.6" step="0.01"></label>
-            <label class="mono">μ <input id="mu"  type="range" min="0.5" max="2.0" step="0.01"></label>
-            <label class="mono">s <input id="s"   type="range" min="0.5" max="2.0" step="0.01"></label>
-            <label class="mono">τ <input id="tau" type="range" min="0.6" max="1.6" step="0.01"></label>
-            <label class="mono">k <input id="k"   type="range" min="0.8" max="1.6" step="0.01"></label>
-          </div>
-        </details>
-      </section>
-
-      <!-- Right: Journal / Trips / Gallery panels -->
+    <main>
       <section class="grid" id="panels">
         <!-- TODAY -->
         <article id="today" class="card" role="tabpanel" aria-labelledby="tab-today">
           <h2>Today</h2>
           <p class="muted">Two silent minutes. Say what mattered. The Matrix will listen.</p>
+
+          <div class="matrix-container"><div id="matrix-root"></div></div>
+
+          <details>
+            <summary>Inner Compass (advanced)</summary>
+            <div class="grid" style="grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px">
+              <label class="mono">d <input id="d"   type="range" min="0.7" max="1.6" step="0.01"></label>
+              <label class="mono">μ <input id="mu"  type="range" min="0.5" max="2.0" step="0.01"></label>
+              <label class="mono">s <input id="s"   type="range" min="0.5" max="2.0" step="0.01"></label>
+              <label class="mono">τ <input id="tau" type="range" min="0.6" max="1.6" step="0.01"></label>
+              <label class="mono">k <input id="k"   type="range" min="0.8" max="1.6" step="0.01"></label>
+            </div>
+          </details>
+
           <div class="grid">
             <input id="title" type="text" placeholder="Title (e.g. Morning reflection)">
             <input id="tags"  type="text" placeholder="Tags (comma separated): calm, curious, connected">
@@ -170,12 +131,15 @@
         <!-- TRIPS -->
         <article id="trips" class="card" role="tabpanel" aria-labelledby="tab-trips" hidden>
           <h2>Trips</h2>
-          <p class="muted">Paste simple CSV: <span class="mono">date, place, activity</span>. Example: <span class="mono">2025-09-01, Athens, Anafiotika wander</span></p>
-          <textarea id="tripCsv" rows="6" placeholder="YYYY-MM-DD, Place, Activity"></textarea>
-          <div class="row" style="justify-content:flex-end">
-            <button id="loadTrips" class="btn primary">Load itinerary</button>
+          <p class="muted">Import and preview your itineraries here.</p>
+          <div>
+            <button id="importPdfBtn" class="btn">Import PDF Itinerary</button>
+            <input type="file" id="pdfInput" accept="application/pdf" hidden />
+            <div id="pdfPreview" class="preview"></div>
+            <button id="saveTripBtn" class="btn">Save This Trip</button>
+            <h3>Saved Trips</h3>
+            <div id="savedTrips"></div>
           </div>
-          <div id="tripList" class="grid" style="margin-top:10px"></div>
         </article>
 
         <!-- GALLERY -->
@@ -185,20 +149,47 @@
           <input id="photos" type="file" accept="image/*" multiple />
           <div class="thumbs" id="thumbs" style="margin-top:10px"></div>
         </article>
+
+        <!-- MAP -->
+        <article id="map" class="card" role="tabpanel" aria-labelledby="tab-map" hidden>
+          <h2>Map</h2>
+          <p class="muted">Your CoTravel map. Updates appear here automatically.</p>
+          <div class="mapWrap">
+            <iframe
+              id="mymap"
+              src="https://www.google.com/maps/d/embed?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y"
+              style="border:0;width:100%;height:520px;border-radius:12px"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              aria-label="CoTravel Map">
+            </iframe>
+          </div>
+        </article>
       </section>
     </main>
   </div>
 
-  <script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script type="module">
+    import React from "https://esm.sh/react@18";
+    import { createRoot } from "https://esm.sh/react-dom@18/client";
+    import LivingMatrix from "./src/components/LivingMatrix.jsx";
+
+    // Configure PDF.js worker so parsing runs without cross-origin issues
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
     // ---------- State ----------
     const $ = (s, r=document)=>r.querySelector(s);
     const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
     const state = {
       emm: { d:1, mu:1, s:1, tau:1, k:1 },
       entries: JSON.parse(localStorage.getItem('mjj.entries')||'[]'),
-      photos:  JSON.parse(localStorage.getItem('mjj.photos')||'[]'), // [{dataURL, date}]
-      trips:   JSON.parse(localStorage.getItem('mjj.trips')||'[]')   // [{date, place, activity}]
+      photos:  JSON.parse(localStorage.getItem('mjj.photos')||'[]') // [{dataURL, date}]
     };
+
+    const matrixRoot = createRoot(document.getElementById('matrix-root'));
+    function renderMatrix() {
+      matrixRoot.render(React.createElement(LivingMatrix, { ...state.emm }));
+    }
 
     // ---------- EMM helpers ----------
     function parseParams(){
@@ -232,6 +223,7 @@
         input.addEventListener('input', ()=>{
           const next = {...state.emm, [k]: parseFloat(input.value)};
           applyEMM(next);
+          renderMatrix();
           history.replaceState(null,'', location.pathname + '?' + new URLSearchParams(next).toString());
         });
       });
@@ -246,6 +238,7 @@
 
       const emmFromTags = tags.length ? tagsToEMM(tags, state.emm) : state.emm;
       applyEMM(emmFromTags);
+      renderMatrix();
 
       const entry = {
         id: Date.now(),
@@ -282,26 +275,72 @@
       a.click(); URL.revokeObjectURL(a.href);
     }
 
-    // ---------- Trips ----------
-    function loadTrips(){
-      const text = $('#tripCsv').value.trim();
-      if(!text){ $('#tripList').innerHTML='<p class="muted">Paste a few lines first.</p>'; return; }
-      const rows = text.split('\n').map(l=>l.split(',').map(s=>s.trim()));
-      const items = rows.filter(r=>r.length>=2).map(r=>({date:r[0], place:r[1], activity:r[2]||''}));
-      state.trips = items;
-      localStorage.setItem('mjj.trips', JSON.stringify(state.trips));
-      renderTrips();
+    // ---------- Trips PDF Import ----------
+    const importPdfBtn = document.getElementById("importPdfBtn");
+    const pdfInput = document.getElementById("pdfInput");
+    const pdfPreview = document.getElementById("pdfPreview");
+    const saveTripBtn = document.getElementById("saveTripBtn");
+    const savedTripsDiv = document.getElementById("savedTrips");
+
+    let currentTripRows = [];
+
+    importPdfBtn.addEventListener("click", () => pdfInput.click());
+    pdfInput.addEventListener("change", handlePdf);
+    saveTripBtn.addEventListener("click", saveTrip);
+
+    async function handlePdf(evt){
+      const file = evt.target.files[0];
+      if(!file) return;
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+      let text = "";
+      for(let i=1;i<=pdf.numPages;i++){
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(it=>it.str).join(" ") + "\n";
+      }
+      renderPreview(text);
+      evt.target.value = ""; // allow re-selecting same file
     }
-    function renderTrips(){
-      const box = $('#tripList');
-      if(state.trips.length===0){ box.innerHTML=''; return; }
-      box.innerHTML = state.trips.map(t=>`
-        <div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0">
-          <div><strong>${t.date}</strong> — ${t.place}${t.activity?': '+t.activity:''}</div>
-          <div class="chips"><span class="chip">itinerary</span></div>
-        </div>
-      `).join('');
+
+    function renderPreview(text){
+      const lines = text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+      currentTripRows = lines.map((line,i)=>({id:i, raw:line}));
+      const table = `
+        <table>
+          <thead><tr><th>#</th><th>Detail</th></tr></thead>
+          <tbody>
+            ${currentTripRows.map(r=>`<tr><td>${r.id+1}</td><td>${r.raw}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      `;
+      pdfPreview.innerHTML = table;
     }
+
+    function saveTrip(){
+      if(!currentTripRows.length) return alert("No trip to save!");
+      const saved = JSON.parse(localStorage.getItem("myTrips")||"[]");
+      const trip = { id: Date.now(), rows: currentTripRows };
+      saved.push(trip);
+      localStorage.setItem("myTrips", JSON.stringify(saved));
+      renderSavedTrips();
+    }
+
+    function renderSavedTrips(){
+      const saved = JSON.parse(localStorage.getItem("myTrips")||"[]");
+      if(!saved.length){
+        savedTripsDiv.innerHTML = "<em>No saved trips</em>";
+        return;
+      }
+      savedTripsDiv.innerHTML = saved.map(t=>`
+        <details>
+          <summary>Trip ${new Date(t.id).toLocaleString()}</summary>
+          <ul>${t.rows.map(r=>`<li>${r.raw}</li>`).join("")}</ul>
+        </details>
+      `).join("");
+    }
+
+    // Restore saved trips on load handled during init
 
     // ---------- Gallery ----------
     function handlePhotos(ev){
@@ -327,20 +366,22 @@
 
     // ---------- Tabs ----------
     function wireTabs(){
-      const tabs = [['today','#tab-today'],['trips','#tab-trips'],['gallery','#tab-gallery']];
-      tabs.forEach(([id,btn])=>{
-        $(btn).addEventListener('click', e=>{
-          e.preventDefault();
-          tabs.forEach(([tid,tbtn])=>{
-            $('#'+tid).hidden = (tid!==id);
-            $(tbtn).setAttribute('aria-current', tid===id ? 'page' : 'false');
-          });
-          history.replaceState(null,'', location.pathname + location.search + '#'+id);
+      const KNOWN = ['#today', '#trips', '#gallery', '#map']; // include #map for My Maps embed
+
+      function showPanel(hash){
+        const target = KNOWN.includes(hash) ? hash : '#today';
+        document.querySelectorAll('article[role="tabpanel"]').forEach(p => p.hidden = true);
+        const panel = document.querySelector(target);
+        if (panel) panel.hidden = false;
+        document.querySelectorAll('nav.tabs a[role="tab"]').forEach(a => {
+          const active = a.getAttribute('href') === target;
+          a.classList.toggle('active', active);
+          a.setAttribute('aria-current', active ? 'page' : 'false');
         });
-      });
-      // open deep link
-      const hash = location.hash.replace('#','');
-      if(['today','trips','gallery'].includes(hash)) $( '#tab-'+hash ).click();
+      }
+
+      window.addEventListener('hashchange', () => showPanel(location.hash));
+      showPanel(location.hash || '#today');
     }
 
     // ---------- Share link ----------
@@ -352,12 +393,12 @@
     // ---------- Init ----------
     parseParams();
     applyEMM(state.emm);
+    renderMatrix();
     wireInnerCompass(); wireTabs();
-    renderRecent(); renderTrips(); renderThumbs();
+    renderRecent(); renderSavedTrips(); renderThumbs();
 
     $('#saveEntry').addEventListener('click', saveEntry);
     $('#exportJournal').addEventListener('click', exportJournal);
-    $('#loadTrips').addEventListener('click', loadTrips);
     $('#photos').addEventListener('change', handlePhotos);
     $('#copyLink').addEventListener('click', copyShare);
   </script>
