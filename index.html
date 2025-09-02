@@ -66,6 +66,7 @@
     .thumbs img{width:100%;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
     details>summary{cursor:pointer;font-weight:600;margin:.5rem 0}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .mapWrap iframe{border:0;width:100%;height:520px;border-radius:12px}
     .trip-preview{width:100%;border-collapse:collapse;margin-top:1rem}
     .trip-preview th,.trip-preview td{border:1px solid #ddd;padding:8px}
     .trip-preview th{background:#f4f4f4;text-align:left}
@@ -204,7 +205,6 @@
               id="mymap"
               src="https://www.google.com/maps/d/embed?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y"
               loading="lazy"
-              style="border:0;width:100%;height:520px;border-radius:12px"
               referrerpolicy="no-referrer-when-downgrade"
               aria-label="CoTravel Map">
             </iframe>
@@ -437,7 +437,7 @@
 
     // ---------- Tabs ----------
     function wireTabs(){
-      const KNOWN = ['#today', '#trips', '#gallery', '#map'];
+      const KNOWN = ['#today', '#trips', '#gallery', '#map']; // include #map for My Maps embed
 
       function showPanel(hash){
         const target = KNOWN.includes(hash) ? hash : '#today';
