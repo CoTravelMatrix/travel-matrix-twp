@@ -392,26 +392,25 @@
       `;
 
       document.getElementById("save-trips-btn").onclick = () => {
-        localStorage.setItem("myTrips", JSON.stringify(rows));
+        state.trips = rows.map(r => ({ date: r.date, place: r.detail, activity: '' }));
+        localStorage.setItem('mjj.trips', JSON.stringify(state.trips));
+        renderTrips();
+        renderPreviewRows(rows);
         alert("Trips saved!");
       };
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-      const saved = localStorage.getItem("myTrips");
-      if (saved) {
-        const rows = JSON.parse(saved);
-        previewDiv.innerHTML = `
-          <h4>Saved Trips</h4>
-          <table class="trip-preview">
-            <thead><tr><th>Date</th><th>Detail</th></tr></thead>
-            <tbody>
-              ${rows.map(r => `<tr><td>${r.date}</td><td>${r.detail}</td></tr>`).join("")}
-            </tbody>
-          </table>
-        `;
-      }
-    });
+    function renderPreviewRows(rows){
+      if(!rows || rows.length===0){ previewDiv.innerHTML=''; return; }
+      previewDiv.innerHTML = `
+        <table class="trip-preview">
+          <thead><tr><th>Date</th><th>Detail</th></tr></thead>
+          <tbody>
+            ${rows.map(r => `<tr><td>${r.date}</td><td>${r.detail}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      `;
+    }
 
     // ---------- Gallery ----------
     function handlePhotos(ev){
@@ -466,6 +465,7 @@
     applyEMM(state.emm);
     wireInnerCompass(); wireTabs();
     renderRecent(); renderTrips(); renderThumbs();
+    renderPreviewRows(state.trips.map(t=>({date:t.date, detail:t.place + (t.activity?': '+t.activity:'')})));
 
     $('#saveEntry').addEventListener('click', saveEntry);
     $('#exportJournal').addEventListener('click', exportJournal);
