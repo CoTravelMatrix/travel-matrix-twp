@@ -89,6 +89,7 @@
       <a href="#today"   id="tab-today"   role="tab" aria-controls="today"   aria-current="page">Today</a>
       <a href="#trips"   id="tab-trips"   role="tab" aria-controls="trips">Trips</a>
       <a href="#gallery" id="tab-gallery" role="tab" aria-controls="gallery">Gallery</a>
+      <a href="#map"     id="tab-map"     role="tab" aria-controls="map">Map</a>
     </nav>
 
     <main class="grid grid-2">
@@ -184,6 +185,28 @@
           <p class="muted">Upload photos to sit alongside your entries. They remain in your browser only.</p>
           <input id="photos" type="file" accept="image/*" multiple />
           <div class="thumbs" id="thumbs" style="margin-top:10px"></div>
+        </article>
+
+        <!-- MAP -->
+        <article id="map" class="card" role="tabpanel" aria-labelledby="tab-map" hidden>
+          <h2>Map</h2>
+          <p class="muted">Your CoTravel map. Edit it in Google My Maps; updates appear here automatically.</p>
+          <div class="mapWrap">
+            <iframe
+              id="mymap"
+              src="https://www.google.com/maps/d/embed?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y"
+              loading="lazy"
+              style="border:0;width:100%;height:520px;border-radius:12px"
+              referrerpolicy="no-referrer-when-downgrade"
+              aria-label="CoTravel Map">
+            </iframe>
+          </div>
+          <div class="row" style="margin-top:.5rem">
+            <a class="btn" target="_blank" rel="noopener"
+               href="https://www.google.com/maps/d/u/0/edit?mid=1eFv5t__eYzlJHbm07FWcHc2zl4nxg4Y&usp=sharing">
+              Open in My Maps (edit)
+            </a>
+          </div>
         </article>
       </section>
     </main>
@@ -327,7 +350,12 @@
 
     // ---------- Tabs ----------
     function wireTabs(){
-      const tabs = [['today','#tab-today'],['trips','#tab-trips'],['gallery','#tab-gallery']];
+      const tabs = [
+        ['today',   '#tab-today'],
+        ['trips',   '#tab-trips'],
+        ['gallery', '#tab-gallery'],
+        ['map',     '#tab-map']
+      ];
       tabs.forEach(([id,btn])=>{
         $(btn).addEventListener('click', e=>{
           e.preventDefault();
@@ -340,7 +368,7 @@
       });
       // open deep link
       const hash = location.hash.replace('#','');
-      if(['today','trips','gallery'].includes(hash)) $( '#tab-'+hash ).click();
+      if(['today','trips','gallery','map'].includes(hash)) $( '#tab-'+hash ).click();
     }
 
     // ---------- Share link ----------
