@@ -36,24 +36,20 @@
     nav.tabs a[aria-current="page"]{background:var(--blue);border-color:var(--blue);color:#fff}
 
     /* Matrix SVG animation — “thinks quietly in the background” */
-    .matrix{width:100%;height:auto;display:block}
-    .outer{transform-origin:50% 50%;animation:breathe calc(6s / var(--tau)) ease-in-out infinite alternate}
-    .petals-cw{transform-origin:50% 50%;animation:spinCW calc(40s / var(--s)) linear infinite}
-    .petals-ccw{transform-origin:50% 50%;animation:spinCCW calc(36s / var(--s)) linear infinite}
-    .orbit-fast{transform-origin:50% 50%;animation:spinCW calc(18s / var(--s)) linear infinite}
-    .orbit-medium{transform-origin:50% 50%;animation:spinCW calc(24s / var(--s)) linear infinite}
-    .orbit-slow{transform-origin:50% 50%;animation:spinCW calc(30s / var(--s)) linear infinite}
-    .core{transform-origin:50% 50%;animation:pulse calc(2.8s / var(--k)) ease-in-out infinite alternate}
-    .traveller{filter:drop-shadow(0 0 calc(1.5px * var(--mu)) rgba(50,111,183,calc(.25 * var(--mu))))}
-
-    @keyframes breathe{from{transform:scale(calc(.98 * var(--d)))} to{transform:scale(calc(1.02 * var(--d)))}}
-    @keyframes spinCW{to{transform:rotate(360deg)}}
-    @keyframes spinCCW{to{transform:rotate(-360deg)}}
-    @keyframes pulse{from{transform:scale(calc(1 + (var(--k) - 1) * .25))} to{transform:scale(calc(1.08 + (var(--k)-1) * .35))}}
+    .matrix-container{display:flex;justify-content:center;margin:1rem 0}
+    .matrix-svg{width:100%;max-width:400px;height:auto}
+    #outer-field{transform-origin:200px 200px;animation:breathe calc(6s / var(--tau)) ease-in-out infinite alternate}
+    #petals{transform-origin:200px 200px;animation:rotate calc(20s / var(--s)) linear infinite}
+    #orbit-fast{transform-origin:200px 200px;animation:rotate calc(10s / var(--d)) linear infinite}
+    #orbit-slow{transform-origin:200px 200px;animation:rotate calc(15s / var(--mu)) linear infinite reverse}
+    #core{transform-origin:200px 200px;animation:pulse calc(2s / var(--k)) ease-in-out infinite alternate}
+    @keyframes breathe{from{transform:scale(0.95);} to{transform:scale(1.05);}}
+    @keyframes rotate{to{transform:rotate(360deg);}}
+    @keyframes pulse{from{transform:scale(0.9);} to{transform:scale(1.1);}}
 
     /* Respect OS reduced motion */
     @media (prefers-reduced-motion: reduce){
-      .outer,.petals-cw,.petals-ccw,.orbit-fast,.orbit-medium,.orbit-slow,.core{animation:none !important}
+      #outer-field,#petals,#orbit-fast,#orbit-slow,#core{animation:none !important}
     }
 
     /* Small helpers */
@@ -96,69 +92,59 @@
       <a href="#map"     id="tab-map"     role="tab" aria-controls="map">Map</a>
     </nav>
 
-    <main class="grid grid-2">
-      <!-- Left: Matrix -->
-      <section class="card">
-        <h2>Living Matrix</h2>
-        <p class="muted">Your inner compass rendered as living geometry. Adjusted quietly by your reflections.</p>
-        <svg id="matrix" class="matrix" viewBox="0 0 600 600" aria-label="Travel Matrix" style="--d:1;--mu:1;--s:1;--tau:1;--k:1">
-          <!-- outer field -->
-          <g class="outer">
-            <circle cx="300" cy="300" r="280" fill="none" stroke="#326FB7" stroke-width="1.2"/>
-          </g>
-          <!-- petals -->
-          <g class="petals-cw" opacity=".85">
-            <!-- six rings -->
-            <g transform="rotate(0 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(30 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(60 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(90 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(120 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-            <g transform="rotate(150 300 300)"><circle cx="300" cy="300" r="210" fill="none" stroke="#aeb4b9" stroke-width="1.2"/></g>
-          </g>
-          <g class="petals-ccw" opacity=".65">
-            <g transform="rotate(15 300 300)"><circle cx="300" cy="300" r="170" fill="none" stroke="#326FB7" stroke-width="1.2"/></g>
-            <g transform="rotate(45 300 300)"><circle cx="300" cy="300" r="170" fill="none" stroke="#326FB7" stroke-width="1.2"/></g>
-            <g transform="rotate(75 300 300)"><circle cx="300" cy="300" r="170" fill="none" stroke="#326FB7" stroke-width="1.2"/></g>
-          </g>
-          <!-- orbits -->
-          <g class="orbit-fast">
-            <ellipse cx="300" cy="300" rx="250" ry="150" fill="none" stroke="#111" stroke-width="3" opacity=".9"/>
-            <circle cx="550" cy="300" r="10" fill="#111" class="traveller"/>
-          </g>
-          <g class="orbit-medium">
-            <ellipse cx="300" cy="300" rx="230" ry="210" fill="none" stroke="#aeb4b9" stroke-width="2.2"/>
-            <circle cx="70"  cy="300" r="10" fill="#111" class="traveller"/>
-          </g>
-          <g class="orbit-slow">
-            <ellipse cx="300" cy="300" rx="120" ry="260" fill="none" stroke="#111" stroke-width="2.2"/>
-            <circle cx="420" cy="300" r="10" fill="#111" class="traveller"/>
-          </g>
-          <!-- core -->
-          <g class="core">
-            <circle cx="300" cy="300" r="50" fill="#222" opacity=".88"/>
-            <circle cx="300" cy="300" r="70" fill="none" stroke="#326FB7" stroke-width="2.2" opacity=".95"/>
-          </g>
-        </svg>
-
-        <details>
-          <summary>Inner Compass (advanced)</summary>
-          <div class="grid" style="grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px">
-            <label class="mono">d <input id="d"   type="range" min="0.7" max="1.6" step="0.01"></label>
-            <label class="mono">μ <input id="mu"  type="range" min="0.5" max="2.0" step="0.01"></label>
-            <label class="mono">s <input id="s"   type="range" min="0.5" max="2.0" step="0.01"></label>
-            <label class="mono">τ <input id="tau" type="range" min="0.6" max="1.6" step="0.01"></label>
-            <label class="mono">k <input id="k"   type="range" min="0.8" max="1.6" step="0.01"></label>
-          </div>
-        </details>
-      </section>
-
-      <!-- Right: Journal / Trips / Gallery panels -->
+    <main>
       <section class="grid" id="panels">
         <!-- TODAY -->
         <article id="today" class="card" role="tabpanel" aria-labelledby="tab-today">
           <h2>Today</h2>
           <p class="muted">Two silent minutes. Say what mattered. The Matrix will listen.</p>
+
+          <div class="matrix-container">
+            <svg id="matrix-svg" viewBox="0 0 400 400" class="matrix-svg">
+              <!-- Background -->
+              <rect width="400" height="400" fill="#f8fafc" />
+
+              <!-- Outer breathing field -->
+              <g id="outer-field">
+                <circle cx="200" cy="200" r="180" fill="none" stroke="#326FB7" stroke-width="2" opacity="0.8"/>
+              </g>
+
+              <!-- Rotating petals -->
+              <g id="petals" opacity="0.6">
+                <circle cx="200" cy="200" r="120" fill="none" stroke="#aeb4b9" stroke-width="1.5"/>
+                <circle cx="200" cy="200" r="100" fill="none" stroke="#aeb4b9" stroke-width="1.5"/>
+              </g>
+
+              <!-- Orbits with travellers -->
+              <g id="orbit-fast">
+                <ellipse cx="200" cy="200" rx="160" ry="100" fill="none" stroke="#111" stroke-width="2.5"/>
+                <circle id="traveller-fast" cx="360" cy="200" r="6" fill="#111"/>
+              </g>
+
+              <g id="orbit-slow">
+                <ellipse cx="200" cy="200" rx="80" ry="140" fill="none" stroke="#666" stroke-width="2"/>
+                <circle id="traveller-slow" cx="280" cy="200" r="5" fill="#666"/>
+              </g>
+
+              <!-- Pulsing core -->
+              <g id="core">
+                <circle cx="200" cy="200" r="30" fill="#222" opacity="0.85"/>
+                <circle cx="200" cy="200" r="45" fill="none" stroke="#326FB7" stroke-width="2" opacity="0.9"/>
+              </g>
+            </svg>
+          </div>
+
+          <details>
+            <summary>Inner Compass (advanced)</summary>
+            <div class="grid" style="grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px">
+              <label class="mono">d <input id="d"   type="range" min="0.7" max="1.6" step="0.01"></label>
+              <label class="mono">μ <input id="mu"  type="range" min="0.5" max="2.0" step="0.01"></label>
+              <label class="mono">s <input id="s"   type="range" min="0.5" max="2.0" step="0.01"></label>
+              <label class="mono">τ <input id="tau" type="range" min="0.6" max="1.6" step="0.01"></label>
+              <label class="mono">k <input id="k"   type="range" min="0.8" max="1.6" step="0.01"></label>
+            </div>
+          </details>
+
           <div class="grid">
             <input id="title" type="text" placeholder="Title (e.g. Morning reflection)">
             <input id="tags"  type="text" placeholder="Tags (comma separated): calm, curious, connected">
